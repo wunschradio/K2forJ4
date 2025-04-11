@@ -102,12 +102,7 @@ if (
             <div class="k2clr"></div>
         </div>
         '.K2HelperHTML::mobileMenu().'
-    </div>
-
-    <!-- K2 Update Service -->
-    <script type="text/javascript">var K2_INSTALLED_VERSION = \''.K2_CURRENT_VERSION.'\';</script>
-    <script type="text/javascript" src="https://getk2.org/app/update.js?t='.date('Ymd').'"></script>
-    ';
+    </div>';
 } else {
     $k2ComponentHeader = '';
     $k2ComponentFooter = '';
