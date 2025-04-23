@@ -506,7 +506,6 @@ class K2ModelItem extends K2Model
                     }
                     closedir($galleryDir);
 
-                    // Galerie-Zuweisung
                     $row->gallery = '{gallery}' . $row->id . '{/gallery}';
 
                 } else {
