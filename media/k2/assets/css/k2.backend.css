@@ -898,8 +898,8 @@ div#k2Modal div#editor-xtd-buttons .button2-left {display:inline;} /* Joomla 1.5
 .isJ30 #k2FormTopNav ul.k2NavTabs li.ui-tabs-selected a:before {bottom:-5px;}
 
 /* Lists */
-.isJ30 #k2AdminContainer .adminlist tbody > tr:nth-child(odd) > td {background:#f9f9f9;}
-.isJ30 #k2AdminContainer .adminlist tbody > tr:nth-child(even) > td {background:#f0f2f2;}
+.isJ30 #k2AdminContainer .adminlist tbody > tr:nth-child(odd) > td {background: none!important;}
+/*.isJ30 #k2AdminContainer .adminlist tbody > tr:nth-child(even) > td {background:#f0f2f2;}*/
 
 /* Scrollspy Menu */
 .isJ30 #k2AdminContainer #k2ContentView ul.k2ScrollSpyMenu {display:block;position:fixed;list-style:none;margin:0;padding:0;width:320px;height:100%;z-index:1;top:142px;}
