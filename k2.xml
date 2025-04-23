@@ -22,9 +22,6 @@
             <file driver="mysql" charset="utf8">uninstall.mysql.sql</file>
         </sql>
     </uninstall>
-    <updateservers>
-        <server type="extension" priority="1" name="K2 Updates">http://getk2.org/app/update.xml</server>
-    </updateservers>
     <files folder="components/com_k2">
         <folder>controllers</folder>
         <folder>css</folder>
