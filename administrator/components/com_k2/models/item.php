@@ -445,9 +445,9 @@ class K2ModelItem extends K2Model
             $row->image_credits = '';
         }
 
-        // Gallery
-        if (empty($savedRow->gallery)) {
-            $row->gallery = '';
+        // There is stored gllery
+        if (!empty($savedRow->gallery)) {
+            $row->gallery = $savedRow->gallery;
         }
 
         $flickrGallery = Factory::getApplication()->input->getString('flickrGallery');
