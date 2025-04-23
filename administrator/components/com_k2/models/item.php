@@ -482,24 +482,42 @@ class K2ModelItem extends K2Model
                     Folder::delete($savepath . '/' . $row->id);
                 }
 
-                if (!JArchive::extract($savepath . '/' . $handle->file_dst_name, $savepath . '/' . $row->id)) {
+                if (!Folder::create($savepath . '/' . $row->id)) {
                     $app->enqueueMessage(Text::_('K2_GALLERY_UPLOAD_ERROR_CANNOT_EXTRACT_ARCHIVE'), 'error');
                     $app->redirect('index.php?option=com_k2&view=items');
-                } else {
-                    $imageDir = $savepath . '/' . $row->id;
-                    $galleryDir = opendir($imageDir);
+                    return;
+                }
+
+
+                $zipPath = $savepath . '/' . $handle->file_dst_name;
+                $zip = new ZipArchive();
+                if ($zip->open($zipPath) === true) {
+                    $zip->extractTo($savepath . '/' . $row->id);
+                    $zip->close();
+
+                    // Dateien umbenennen (Leerzeichen -> _ und File::makeSafe)
+                    $galleryDir = opendir($savepath . '/' . $row->id);
                     while ($filename = readdir($galleryDir)) {
-                        if ($filename != "." && $filename != "..") {
+                        if ($filename !== "." && $filename !== "..") {
                             $file = str_replace(" ", "_", $filename);
                             $safefilename = File::makeSafe($file);
-                            rename($imageDir . '/' . $filename, $imageDir . '/' . $safefilename);
+                            rename($savepath . '/' . $row->id . '/' . $filename, $savepath . '/' . $row->id . '/' . $safefilename);
                         }
                     }
                     closedir($galleryDir);
+
+                    // Galerie-Zuweisung
                     $row->gallery = '{gallery}' . $row->id . '{/gallery}';
+
+                } else {
+                    $app->enqueueMessage(Text::_('K2_GALLERY_UPLOAD_ERROR_CANNOT_EXTRACT_ARCHIVE'), 'error');
+                    $app->redirect('index.php?option=com_k2&view=items');
+                    return;
                 }
+
                 File::delete($savepath . '/' . $handle->file_dst_name);
                 $handle->clean();
+
             } else {
                 $app->enqueueMessage($handle->error, 'error');
                 $app->redirect('index.php?option=com_k2&view=items');
