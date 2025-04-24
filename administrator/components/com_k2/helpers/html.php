@@ -385,16 +385,16 @@ class K2HelperHTML
             // Frontend only
             if ($app->isClient('site')) {
                 // Magnific Popup
-                if (!$user->guest || ($option == 'com_k2' && $view == 'item') || defined('K2_JOOMLA_MODAL_REQUIRED')) {
-                    $document->addStyleSheet('https://cdnjs.cloudflare.com/ajax/libs/magnific-popup.js/1.1.0/magnific-popup.min.css');
-                    $document->addStyleDeclaration('
-                        /* K2 - Magnific Popup Overrides */
-                        .mfp-iframe-holder {padding:10px;}
-                        .mfp-iframe-holder .mfp-content {max-width:100%;width:100%;height:100%;}
-                        .mfp-iframe-scaler iframe {background:#fff;padding:10px;box-sizing:border-box;box-shadow:none;}
-                    ');
-                    $document->addScript('https://cdnjs.cloudflare.com/ajax/libs/magnific-popup.js/1.1.0/jquery.magnific-popup.min.js');
-                }
+//                if (!$user->guest || ($option == 'com_k2' && $view == 'item') || defined('K2_JOOMLA_MODAL_REQUIRED')) {
+//                    $document->addStyleSheet('https://cdnjs.cloudflare.com/ajax/libs/magnific-popup.js/1.1.0/magnific-popup.min.css');
+//                    $document->addStyleDeclaration('
+//                        /* K2 - Magnific Popup Overrides */
+//                        .mfp-iframe-holder {padding:10px;}
+//                        .mfp-iframe-holder .mfp-content {max-width:100%;width:100%;height:100%;}
+//                        .mfp-iframe-scaler iframe {background:#fff;padding:10px;box-sizing:border-box;box-shadow:none;}
+//                    ');
+//                    $document->addScript('https://cdnjs.cloudflare.com/ajax/libs/magnific-popup.js/1.1.0/jquery.magnific-popup.min.js');
+//                }
 
                 // JS
                 $document->addScript(URI::root(true) . '/media/k2/assets/js/k2.frontend.js?v=' . K2_CURRENT_VERSION . '&b=' . K2_BUILD_ID . '&sitepath=' . URI::root(true) . '/');
