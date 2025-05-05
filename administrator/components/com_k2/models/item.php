@@ -456,7 +456,14 @@ class K2ModelItem extends K2Model
         }
 
         if (isset($files['gallery']) && $files['gallery']['error'] == 0 && !Factory::getApplication()->input->getBool('del_gallery')) {
-            $handle = new Upload($files['gallery']);
+            //$handle = new Upload($files['gallery']);
+            $handle = new Upload(array(
+                'name'     => $_FILES['gallery']['name'],
+                'type'     => $_FILES['gallery']['type'],
+                'tmp_name' => $_FILES['gallery']['tmp_name'],
+                'error'    => $_FILES['gallery']['error'],
+                'size'     => $_FILES['gallery']['size']
+            ));
             $handle->file_auto_rename = true;
             $savepath = JPATH_ROOT . '/media/k2/galleries';
             $handle->allowed = array(
