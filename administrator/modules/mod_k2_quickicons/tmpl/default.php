@@ -14,6 +14,18 @@ use Joomla\CMS\Language\Text;
 use Joomla\CMS\Router\Route;
 
 ?>
+<style>
+    #k2QuickIcons .icon i {
+        font-size: 28px; /* statt z.B. 36px */
+        display: block;
+        margin: 5px auto 5px auto;
+    }
+    a[target="_blank"]::after,
+    a[target="_blank"]::before {
+        display: none !important;
+        content: none !important;
+    }
+</style>
 
 <div class="clr"></div>
 
@@ -123,32 +135,15 @@ use Joomla\CMS\Router\Route;
             </div>
             <div class="icon-wrapper">
                 <div class="icon">
-                    <a data-k2-modal="iframe" target="_blank" href="https://getk2.org/documentation/">
+                    <a  target="_blank" href="https://getk2.org/documentation/">
                         <i class="dashicon documentation"></i>
                         <span><?php echo Text::_('K2_DOCS_AND_TUTORIALS'); ?></span>
                     </a>
                 </div>
             </div>
-			<?php if ($user->gid>23): ?>
-                <div class="icon-wrapper">
-                    <div class="icon">
-                        <a data-k2-modal="iframe" target="_blank" href="https://getk2.org/extend/">
-                            <i class="dashicon extend"></i>
-                            <span><?php echo Text::_('K2_EXTEND'); ?></span>
-                        </a>
-                    </div>
-                </div>
-                <div class="icon-wrapper">
-                    <div class="icon">
-                        <a data-k2-modal="iframe" target="_blank" href="https://www.joomlaworks.net/forum/k2">
-                            <i class="dashicon help"></i>
-                            <span><?php echo Text::_('K2_COMMUNITY'); ?></span>
-                        </a>
-                    </div>
-                </div>
-			<?php endif; ?>
             <div style="clear: both;"></div>
         </div>
     </div>
 
 </div>
+
