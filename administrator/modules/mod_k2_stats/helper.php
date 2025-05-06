@@ -16,11 +16,10 @@ class modK2StatsHelper
     public static function getLatestItems()
     {
         $db = Factory::getDbo();
-        $query = "SELECT i.*, v.name AS author
+        $query = "SELECT *, v.name AS author
             FROM #__k2_items AS i
-            LEFT JOIN #__k2_categories AS c ON c.id = i.catid
             LEFT JOIN #__users AS v ON v.id = i.created_by
-            WHERE i.trash = 0 AND c.trash = 0
+            WHERE i.trash = 0
             ORDER BY i.id DESC";
         $query = str_ireplace('#__groups', '#__viewlevels', $query);
         $query = str_ireplace('g.name', 'g.title', $query);
@@ -34,9 +33,21 @@ class modK2StatsHelper
         $db = Factory::getDbo();
         $query = "SELECT i.*, v.name AS author
             FROM #__k2_items AS i
-            LEFT JOIN #__k2_categories AS c ON c.id = i.catid
             LEFT JOIN #__users AS v ON v.id = i.created_by
-            WHERE i.trash = 0 AND c.trash = 0
+            WHERE i.trash = 0
+            ORDER BY i.hits DESC";
+        $db->setQuery($query, 0, 10);
+        $rows = $db->loadObjectList();
+        return $rows;
+    }
+
+    public static function getPopularItems30()
+    {
+        $db = Factory::getDbo();
+        $query = "SELECT i.*, v.name AS author
+            FROM #__k2_items AS i
+            LEFT JOIN #__users AS v ON v.id = i.created_by
+            WHERE i.trash = 0 AND i.created >= DATE_SUB(NOW(), INTERVAL 30 DAY)
             ORDER BY i.hits DESC";
         $db->setQuery($query, 0, 10);
         $rows = $db->loadObjectList();
