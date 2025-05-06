@@ -28,6 +28,10 @@ if ($params->get('latestItems', 1))
 {
 	$latestItems = modK2StatsHelper::getLatestItems();
 }
+if ($params->get('popularItems30', 1))
+{
+    $popularItems30 = modK2StatsHelper::getPopularItems30();
+}
 if ($params->get('popularItems', 1))
 {
 	$popularItems = modK2StatsHelper::getPopularItems();
