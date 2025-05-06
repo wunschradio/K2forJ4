@@ -58,6 +58,31 @@ $selector = 'k2StatsTabs'.$module->id;
     <?php echo HTMLHelper::_('uitab.endTab'); ?>
 <?php endif; ?>
 
+<?php if($params->get('popularItems30', 1)): ?>
+    <?php echo HTMLHelper::_('uitab.addTab', $selector, 'popularItemsTab'.$module->id, Text::_('K2_POPULAR_ITEMS').' ('.Text::_('JMONTH').')'); ?>
+    <table class="adminlist table table-striped">
+        <thead>
+        <tr>
+            <td class="title"><?php echo Text::_('K2_TITLE'); ?></td>
+            <td class="title"><?php echo Text::_('K2_HITS'); ?></td>
+            <td class="title"><?php echo Text::_('K2_CREATED'); ?></td>
+            <td class="title"><?php echo Text::_('K2_AUTHOR'); ?></td>
+        </tr>
+        </thead>
+        <tbody>
+        <?php foreach($popularItems30 as $popular): ?>
+            <tr>
+                <td><a href="<?php echo Route::_('index.php?option=com_k2&view=item&cid='.$popular->id); ?>"><?php echo $popular->title; ?></a></td>
+                <td><?php echo $popular->hits; ?></td>
+                <td><?php echo HTMLHelper::_('date', $popular->created , Text::_('K2_DATE_FORMAT')); ?></td>
+                <td><?php echo $popular->author; ?></td>
+            </tr>
+        <?php endforeach; ?>
+        </tbody>
+    </table>
+    <?php echo HTMLHelper::_('uitab.endTab'); ?>
+<?php endif; ?>
+
 <?php if($params->get('popularItems', 1)): ?>
     <?php echo HTMLHelper::_('uitab.addTab', $selector, 'popularItemsTab'.$module->id, Text::_('K2_POPULAR_ITEMS')); ?>
     <table class="adminlist table table-striped">
