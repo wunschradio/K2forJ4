@@ -310,8 +310,9 @@ class K2ViewItems extends K2View
             $childBar->trash('trash')->listCheck(true);
             $childBar->standardButton('copy', 'K2_COPY', 'copy')->listCheck(true);
 
-            $batchButton = '<joomla-toolbar-button id="toolbar-batch"><button id="K2BatchButton" class="btn btn-small" href="#"><i class="icon-edit"></i>' . Text::_('K2_BATCH') . '</button></joomla-toolbar-button>';
+            $toolbar->trash('trash')->listCheck(true);
 
+            $batchButton = '<joomla-toolbar-button id="toolbar-batch"><button id="K2BatchButton" class="btn btn-small" href="#"><i class="icon-edit"></i> ' . Text::_('K2_BATCH') . '</button></joomla-toolbar-button>';
             $toolbar->customButton('batch')->html($batchButton);
 
             if ($user->authorise('core.admin', 'com_k2') || $user->authorise('core.options', 'com_k2')) {
