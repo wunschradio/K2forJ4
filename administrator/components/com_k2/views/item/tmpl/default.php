@@ -397,25 +397,6 @@ $app = Factory::getApplication();
                                             : <?php echo ini_get('upload_max_filesize'); ?>)</i>
                                     </div>
                                 </div>
-                                <div class="itemAdditionalField separator">
-                                    <div class="itemAdditionalValue">
-                                        <?php echo Text::_('K2_OR'); ?>
-                                    </div>
-                                    <div class="itemAdditionalData"></div>
-                                </div>
-                                <div class="itemAdditionalField">
-                                    <div class="itemAdditionalValue">
-                                        <label><?php echo Text::_('K2_OR_ENTER_A_FLICKR_SET_URL'); ?></label>
-                                    </div>
-                                    <div class="itemAdditionalData">
-                                        <input type="text" name="flickrGallery" size="50"
-                                               value="<?php echo ($this->row->galleryType == 'flickr') ? $this->row->galleryValue : ''; ?>"/>
-                                        <span class="hasTip k2GalleryNotice"
-                                              title="<?php echo Text::_('K2_VALID_FLICK_API_KEY_HELP_HEADER'); ?>::<?php echo Text::_('K2_VALID_FLICK_API_KEY_HELP_TEXT'); ?>">
-                                    <i class="fa fa-question-circle" aria-hidden="true"></i>
-                                </span>
-                                    </div>
-                                </div>
                                 <?php if (!empty($this->row->gallery)): ?>
                                     <!-- Preview -->
                                     <div id="itemGallery" class="itemAdditionalField">
