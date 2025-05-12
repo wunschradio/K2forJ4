@@ -15,6 +15,7 @@ use Joomla\CMS\HTML\HTMLHelper;
 use Joomla\CMS\Language\Text;
 use Joomla\CMS\Router\Route;
 use Joomla\CMS\Uri\Uri;
+use Joomla\CMS\Component\ComponentHelper;
 
 $app = Factory::getApplication();
 
@@ -376,6 +377,50 @@ $app = Factory::getApplication();
                                                    value="<?php echo $this->sigProFolder; ?>"/>
                                         </div>
                                     </div>
+                                    <div class="itemAdditionalField separator">
+                                        <div class="itemAdditionalValue">
+                                            <?php echo Text::_('K2_OR'); ?>
+                                        </div>
+                                        <div class="itemAdditionalData"></div>
+                                    </div>
+                                <?php endif; ?>
+                                <?php if (ComponentHelper::isEnabled('com_k2_galleries')): ?>
+                                    <div class="itemAdditionalField">
+                                        <div class="itemAdditionalValue">
+                                            <label>Bildergalerie:</label>
+                                        </div>
+                                        <div class="itemAdditionalData">
+                                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#k2GalleryModal">
+                                                <?php echo Text::_('K2_COM_BE_ITEM_SIGPRO_UPLOAD'); ?>
+                                            </button>
+                                            <div class="modal fade" id="k2GalleryModal" tabindex="-1" aria-labelledby="k2GalleryModalLabel" aria-hidden="true">
+                                                <div class="modal-dialog modal-xl" style="max-width: 90vw;">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title" id="k2GalleryModalLabel">Bildergalerie erstellen</h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Schließen"></button>
+                                                        </div>
+                                                        <div class="modal-body" style="height: 80vh;">
+                                                            <iframe src="<?php echo \Joomla\CMS\Uri\Uri::root(); ?>index.php?option=com_k2_galleries&view=galleries&gallery=<?php echo $this->row->id; ?>&type=k2&tmpl=component"
+                                                                    width="100%" height="100%" frameborder="0" style="border:0;"></iframe>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="itemAdditionalField">
+                                        <div class="itemAdditionalValue">
+                                            <label>Link für Fotografen:</label>
+                                        </div>
+                                        <div class="itemAdditionalData">
+                                            <?php
+                                                $link = Uri::root() . 'index.php?option=com_k2_galleries&view=galleries&gallery='.$this->row->id;
+                                                echo '<span onclick="navigator.clipboard.writeText(\'' . $link . '\')">' . $link . '</span>';
+                                            ?>
+                                        </div>
+                                    </div>
+
                                     <div class="itemAdditionalField separator">
                                         <div class="itemAdditionalValue">
                                             <?php echo Text::_('K2_OR'); ?>
