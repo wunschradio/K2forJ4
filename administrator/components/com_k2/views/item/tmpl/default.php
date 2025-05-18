@@ -20,7 +20,14 @@ use Joomla\CMS\Component\ComponentHelper;
 $app = Factory::getApplication();
 
 ?>
-
+<style>
+    #econaImage img {
+        display: block;
+        max-width: 100%;
+        height: auto;
+        margin: 0 auto;
+    }
+</style>
 <?php if ($app->isClient('site')): ?>
     <!-- Frontend Item Editing (Modal View) -->
 <div id="k2ModalContainer">
@@ -393,6 +400,7 @@ $app = Factory::getApplication();
                                             <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#k2GalleryModal">
                                                 <?php echo Text::_('K2_COM_BE_ITEM_SIGPRO_UPLOAD'); ?>
                                             </button>
+
                                             <div class="modal fade" id="k2GalleryModal" tabindex="-1" aria-labelledby="k2GalleryModalLabel" aria-hidden="true">
                                                 <div class="modal-dialog modal-xl" style="max-width: 90vw;">
                                                     <div class="modal-content">
