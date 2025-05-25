@@ -394,9 +394,10 @@ $app = Factory::getApplication();
                                 <?php if (ComponentHelper::isEnabled('com_k2_galleries')): ?>
                                     <div class="itemAdditionalField">
                                         <div class="itemAdditionalValue">
-                                            <label>Bildergalerie:</label>
+                                            <label><?php echo Text::_('K2_IMAGE_GALLERY'); ?>:</label>
                                         </div>
                                         <div class="itemAdditionalData">
+                                            <?php if($this->row->id) { ?>
                                             <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#k2GalleryModal">
                                                 <?php echo Text::_('K2_COM_BE_ITEM_SIGPRO_UPLOAD'); ?>
                                             </button>
@@ -405,7 +406,7 @@ $app = Factory::getApplication();
                                                 <div class="modal-dialog modal-xl" style="max-width: 90vw;">
                                                     <div class="modal-content">
                                                         <div class="modal-header">
-                                                            <h5 class="modal-title" id="k2GalleryModalLabel">Bildergalerie erstellen</h5>
+                                                            <h5 class="modal-title" id="k2GalleryModalLabel"><?php echo Text::_('K2_IMAGE_GALLERY'); ?></h5>
                                                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Schließen"></button>
                                                         </div>
                                                         <div class="modal-body" style="height: 80vh;">
@@ -415,16 +416,20 @@ $app = Factory::getApplication();
                                                     </div>
                                                 </div>
                                             </div>
+                                            <?php } else { ?>
+                                                <?php echo Text::_('K2_SAVE_FIRST'); ?>
+                                            <?php } ?>
                                         </div>
                                     </div>
+                                    <?php if($this->row->id) { ?>
                                     <div class="itemAdditionalField">
                                         <div class="itemAdditionalValue">
-                                            <label>Link für Fotografen:</label>
+                                            <label><?php echo Text::_('K2_GALLERY_SHARE'); ?></label>
                                         </div>
                                         <div class="itemAdditionalData">
                                             <?php
                                                 $link = Uri::root() . 'index.php?option=com_k2_galleries&view=galleries&gallery='.$this->row->id;
-                                                echo '<span onclick="navigator.clipboard.writeText(\'' . $link . '\')">' . $link . '</span>';
+                                                echo ($this->row->id) ? '<span onclick="navigator.clipboard.writeText(\'' . $link . '\')">' . $link . '</span>' : '';
                                             ?>
                                         </div>
                                     </div>
@@ -435,6 +440,7 @@ $app = Factory::getApplication();
                                         </div>
                                         <div class="itemAdditionalData"></div>
                                     </div>
+                                    <?php } ?>
                                 <?php endif; ?>
                                 <div class="itemAdditionalField">
                                     <div class="itemAdditionalValue">
