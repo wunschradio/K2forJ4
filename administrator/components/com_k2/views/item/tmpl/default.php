@@ -551,7 +551,18 @@ $app = Factory::getApplication();
                                                             <label><?php echo Text::_('K2_SELECT_THIRD_PARTY_MEDIA_PROVIDER'); ?></label>
                                                         </div>
                                                         <div class="itemAdditionalBlock">
-                                                            <?php echo $this->lists['providers']; ?>
+                                                            <?php if($this->lists->providers) { echo $this->lists['providers']; } else { ?>
+                                                                <select id="videoProvider" name="videoProvider">
+                                                                    <option value="YouTube">YouTube</option>
+<!--                                                                    <option value="Dailymotion">Dailymotion</option>-->
+<!--                                                                    <option value="Facebook">Facebook</option>-->
+<!--                                                                    <option value="Flickr">Flickr</option>-->
+<!--                                                                    <option value="Mixcloud">Mixcloud</option>-->
+<!--                                                                    <option value="SoundCloud">SoundCloud</option>-->
+<!--                                                                    <option value="Twitch">Twitch</option>-->
+<!--                                                                    <option value="Vimeo">Vimeo</option>-->
+                                                                </select>
+                                                            <?php } ?>
                                                         </div>
                                                         <br/>
                                                         <br/>
