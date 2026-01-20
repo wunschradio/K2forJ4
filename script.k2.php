@@ -12,6 +12,7 @@ defined('_JEXEC') or die;
 use Joomla\CMS\Factory;
 use Joomla\CMS\Filesystem\File;
 use Joomla\CMS\Installer\Installer;
+use Joomla\Database\DatabaseInterface;
 use Joomla\CMS\Filesystem\Folder;
 use Joomla\CMS\Component\ComponentHelper;
 use Joomla\CMS\Filesystem\Path;
@@ -81,7 +82,10 @@ class Com_K2InstallerScript
 			}
 			$path = ($client == 'administrator') ? $src.'/administrator/modules/'.$name : $src.'/modules/'.$name;
 
-			$installer = new Installer;
+			$installer = new Installer();
+            $installer->setDatabase(
+                    Factory::getContainer()->get(DatabaseInterface::class)
+            );
 			$result = $installer->install($path);
 			if ($result) {
 				$root = ($client == 'administrator') ? JPATH_ADMINISTRATOR : JPATH_SITE;
@@ -116,7 +120,10 @@ class Com_K2InstallerScript
 				$path = $src.'/plugins/'.$group.'/'.$name;
 			}
 
-			$installer = new Installer;
+            $installer = new Installer();
+            $installer->setDatabase(
+                    Factory::getContainer()->get(DatabaseInterface::class)
+            );
 			$result = $installer->install($path);
 			if ($result && $group != 'finder') {
 				if (File::exists(JPATH_SITE.'/plugins/'.$group.'/'.$name.'/'.$name.'.xml')) {
@@ -208,7 +215,10 @@ class Com_K2InstallerScript
 			$extensions = $db->loadColumn();
 			if (count($extensions)) {
 				foreach ($extensions as $id) {
-					$installer = new Installer;
+                    $installer = new Installer();
+                    $installer->setDatabase(
+                            Factory::getContainer()->get(DatabaseInterface::class)
+                    );
 					$result = $installer->uninstall('module', $id);
 				}
 				$status->modules[] = array('name' => $name, 'client' => $client, 'result' => $result);
@@ -225,7 +235,10 @@ class Com_K2InstallerScript
 			$extensions = $db->loadColumn();
 			if (count($extensions)) {
 				foreach ($extensions as $id) {
-					$installer = new Installer;
+                    $installer = new Installer();
+                    $installer->setDatabase(
+                            Factory::getContainer()->get(DatabaseInterface::class)
+                    );
 					$result = $installer->uninstall('plugin', $id);
 				}
 				$status->plugins[] = array('name' => $name, 'group' => $group, 'result' => $result);
