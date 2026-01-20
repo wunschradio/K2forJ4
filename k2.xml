@@ -42,18 +42,29 @@
         <folder>users</folder>
         <folder>videos</folder>
     </media>
-    <languages folder="language/en-GB">
-        <language tag="en-GB">en-GB.com_k2.ini</language>
-        <language tag="en-GB">en-GB.mod_k2_comments.ini</language>
-        <language tag="en-GB">en-GB.mod_k2_comments.sys.ini</language>
-        <language tag="en-GB">en-GB.mod_k2_content.ini</language>
-        <language tag="en-GB">en-GB.mod_k2_content.sys.ini</language>
-        <language tag="en-GB">en-GB.mod_k2_tools.ini</language>
-        <language tag="en-GB">en-GB.mod_k2_tools.sys.ini</language>
-        <language tag="en-GB">en-GB.mod_k2_users.ini</language>
-        <language tag="en-GB">en-GB.mod_k2_users.sys.ini</language>
-        <language tag="en-GB">en-GB.mod_k2_user.ini</language>
-        <language tag="en-GB">en-GB.mod_k2_user.sys.ini</language>
+    <languages folder="language">
+        <language tag="en-GB">en-GB/en-GB.com_k2.ini</language>
+        <language tag="en-GB">en-GB/en-GB.mod_k2_comments.ini</language>
+        <language tag="en-GB">en-GB/en-GB.mod_k2_comments.sys.ini</language>
+        <language tag="en-GB">en-GB/en-GB.mod_k2_content.ini</language>
+        <language tag="en-GB">en-GB/en-GB.mod_k2_content.sys.ini</language>
+        <language tag="en-GB">en-GB/en-GB.mod_k2_tools.ini</language>
+        <language tag="en-GB">en-GB/en-GB.mod_k2_tools.sys.ini</language>
+        <language tag="en-GB">en-GB/en-GB.mod_k2_users.ini</language>
+        <language tag="en-GB">en-GB/en-GB.mod_k2_users.sys.ini</language>
+        <language tag="en-GB">en-GB/en-GB.mod_k2_user.ini</language>
+        <language tag="en-GB">en-GB/en-GB.mod_k2_user.sys.ini</language>
+        <language tag="de-DE">de-DE/de-DE.com_k2.ini</language>
+        <language tag="de-DE">de-DE/de-DE.mod_k2_comments.ini</language>
+        <language tag="de-DE">de-DE/de-DE.mod_k2_comments.sys.ini</language>
+        <language tag="de-DE">de-DE/de-DE.mod_k2_content.ini</language>
+        <language tag="de-DE">de-DE/de-DE.mod_k2_content.sys.ini</language>
+        <language tag="de-DE">de-DE/de-DE.mod_k2_tools.ini</language>
+        <language tag="de-DE">de-DE/de-DE.mod_k2_tools.sys.ini</language>
+        <language tag="de-DE">de-DE/de-DE.mod_k2_users.ini</language>
+        <language tag="de-DE">de-DE/de-DE.mod_k2_users.sys.ini</language>
+        <language tag="de-DE">de-DE/de-DE.mod_k2_user.ini</language>
+        <language tag="de-DE">de-DE/de-DE.mod_k2_user.sys.ini</language>
     </languages>
     <administration>
         <menu img="../media/k2/assets/images/backend/k2_logo_16x16.png" view="items">COM_K2</menu>
@@ -85,22 +96,37 @@
             <filename>install.mysql.sql</filename>
             <filename>uninstall.mysql.sql</filename>
         </files>
-        <languages folder="administrator/language/en-GB">
-            <language tag="en-GB">en-GB.com_k2.dates.ini</language>
-            <language tag="en-GB">en-GB.com_k2.ini</language>
-            <language tag="en-GB">en-GB.com_k2.menu.ini</language>
-            <language tag="en-GB">en-GB.mod_k2_quickicons.ini</language>
-            <language tag="en-GB">en-GB.mod_k2_quickicons.sys.ini</language>
-            <language tag="en-GB">en-GB.mod_k2_stats.ini</language>
-            <language tag="en-GB">en-GB.mod_k2_stats.sys.ini</language>
-            <language tag="en-GB">en-GB.plg_finder_k2.ini</language>
-            <language tag="en-GB">en-GB.plg_finder_k2.sys.ini</language>
-            <language tag="en-GB">en-GB.plg_search_k2.ini</language>
-            <language tag="en-GB">en-GB.plg_search_k2.sys.ini</language>
-            <language tag="en-GB">en-GB.plg_system_k2.ini</language>
-            <language tag="en-GB">en-GB.plg_system_k2.sys.ini</language>
-            <language tag="en-GB">en-GB.plg_user_k2.ini</language>
-            <language tag="en-GB">en-GB.plg_user_k2.sys.ini</language>
+        <languages folder="administrator/language">
+            <language tag="en-GB">en-GB/en-GB.com_k2.dates.ini</language>
+            <language tag="en-GB">en-GB/en-GB.com_k2.ini</language>
+            <language tag="en-GB">en-GB/en-GB.com_k2.menu.ini</language>
+            <language tag="en-GB">en-GB/en-GB.mod_k2_quickicons.ini</language>
+            <language tag="en-GB">en-GB/en-GB.mod_k2_quickicons.sys.ini</language>
+            <language tag="en-GB">en-GB/en-GB.mod_k2_stats.ini</language>
+            <language tag="en-GB">en-GB/en-GB.mod_k2_stats.sys.ini</language>
+            <language tag="en-GB">en-GB/en-GB.plg_finder_k2.ini</language>
+            <language tag="en-GB">en-GB/en-GB.plg_finder_k2.sys.ini</language>
+            <language tag="en-GB">en-GB/en-GB.plg_search_k2.ini</language>
+            <language tag="en-GB">en-GB/en-GB.plg_search_k2.sys.ini</language>
+            <language tag="en-GB">en-GB/en-GB.plg_system_k2.ini</language>
+            <language tag="en-GB">en-GB/en-GB.plg_system_k2.sys.ini</language>
+            <language tag="en-GB">en-GB/en-GB.plg_user_k2.ini</language>
+            <language tag="en-GB">en-GB/en-GB.plg_user_k2.sys.ini</language>
+            <language tag="de-DE">de-DE/de-DE.com_k2.dates.ini</language>
+            <language tag="de-DE">de-DE/de-DE.com_k2.ini</language>
+            <language tag="de-DE">de-DE/de-DE.com_k2.menu.ini</language>
+            <language tag="de-DE">de-DE/de-DE.mod_k2_quickicons.ini</language>
+            <language tag="de-DE">de-DE/de-DE.mod_k2_quickicons.sys.ini</language>
+            <language tag="de-DE">de-DE/de-DE.mod_k2_stats.ini</language>
+            <language tag="de-DE">de-DE/de-DE.mod_k2_stats.sys.ini</language>
+            <language tag="de-DE">de-DE/de-DE.plg_finder_k2.ini</language>
+            <language tag="de-DE">de-DE/de-DE.plg_finder_k2.sys.ini</language>
+            <language tag="de-DE">de-DE/de-DE.plg_search_k2.ini</language>
+            <language tag="de-DE">de-DE/de-DE.plg_search_k2.sys.ini</language>
+            <language tag="de-DE">de-DE/de-DE.plg_system_k2.ini</language>
+            <language tag="de-DE">de-DE/de-DE.plg_system_k2.sys.ini</language>
+            <language tag="de-DE">de-DE/de-DE.plg_user_k2.ini</language>
+            <language tag="de-DE">de-DE/de-DE.plg_user_k2.sys.ini</language>
         </languages>
     </administration>
     <config>
