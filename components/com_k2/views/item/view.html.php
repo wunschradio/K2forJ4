@@ -756,6 +756,15 @@ class K2ViewItem extends K2View
                 }
             }
 
+            // --- YOOtheme Pro Child Theme: also allow overrides from parent /templates/yootheme ---
+            $app      = Factory::getApplication();
+            $template = $app->getTemplate(); // returns e.g. "yootheme_child"
+
+            if (stripos($template, 'yootheme_') === 0 && is_dir(JPATH_SITE . '/templates/yootheme')) {
+                $this->_addPath('template', JPATH_SITE . '/templates/yootheme/html/com_k2/default');
+                $this->_addPath('template', JPATH_SITE . '/templates/yootheme/html/com_k2/templates/default');
+            }
+
             // Assign data
             $this->item = $item;
             $this->user = $user;
