@@ -48,6 +48,13 @@ if ($params->get('statistics', 1))
 {
 	$statistics = modK2StatsHelper::getStatistics();
 }
+if ($params->get('hitsPerMonth', 1))
+{
+	$hitsPerMonth = modK2StatsHelper::getHitsPerMonth();
+	$hitsPerDay = modK2StatsHelper::getHitsPerDay();
+	$topItemsPerDay = modK2StatsHelper::getTopItemsPerDay();
+	$topItemsPerMonth = modK2StatsHelper::getTopItemsPerMonth();
+}
 if (version_compare(JVERSION, '4.0.0-dev', 'ge')){
     require ModuleHelper::getLayoutPath('mod_k2_stats', 'default_j4');
 }

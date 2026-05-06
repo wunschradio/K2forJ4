@@ -172,4 +172,80 @@ class modK2StatsHelper
         $result = $db->loadResult();
         return $result;
     }
+
+    public static function getHitsPerMonth()
+    {
+        $db = Factory::getDbo();
+        $query = "SELECT YEAR(created) AS yr, MONTH(created) AS mn, SUM(hits) AS total_hits, COUNT(*) AS num_items
+            FROM #__k2_items
+            WHERE trash = 0 AND published = 1
+              AND created >= DATE_SUB(NOW(), INTERVAL 12 MONTH)
+            GROUP BY YEAR(created), MONTH(created)
+            ORDER BY yr ASC, mn ASC";
+        $db->setQuery($query);
+        return $db->loadObjectList();
+    }
+
+    public static function getHitsPerDay()
+    {
+        $db = Factory::getDbo();
+        $query = "SELECT YEAR(created) AS yr, MONTH(created) AS mn, DAY(created) AS dy, SUM(hits) AS total_hits, COUNT(*) AS num_items
+            FROM #__k2_items
+            WHERE trash = 0 AND published = 1
+              AND created >= DATE_SUB(NOW(), INTERVAL 12 MONTH)
+            GROUP BY YEAR(created), MONTH(created), DAY(created)
+            ORDER BY yr ASC, mn ASC, dy ASC";
+        $db->setQuery($query);
+        return $db->loadObjectList();
+    }
+
+    public static function getTopItemsPerMonth()
+    {
+        $db = Factory::getDbo();
+        $query = "SELECT i.id, i.title, i.hits, YEAR(i.created) AS yr, MONTH(i.created) AS mn, v.name AS author
+            FROM #__k2_items AS i
+            LEFT JOIN #__users AS v ON v.id = i.created_by
+            WHERE i.trash = 0 AND i.published = 1
+              AND i.created >= DATE_SUB(NOW(), INTERVAL 12 MONTH)
+            ORDER BY YEAR(i.created) DESC, MONTH(i.created) DESC, i.hits DESC";
+        $db->setQuery($query);
+        $all = $db->loadObjectList();
+
+        $grouped = [];
+        foreach ($all as $row) {
+            $key = (int)$row->yr . '-' . (int)$row->mn;
+            if (!isset($grouped[$key])) {
+                $grouped[$key] = [];
+            }
+            if (count($grouped[$key]) < 10) {
+                $grouped[$key][] = $row;
+            }
+        }
+        return $grouped;
+    }
+
+    public static function getTopItemsPerDay()
+    {
+        $db = Factory::getDbo();
+        $query = "SELECT i.id, i.title, i.hits, DATE(i.created) AS day_date, v.name AS author
+            FROM #__k2_items AS i
+            LEFT JOIN #__users AS v ON v.id = i.created_by
+            WHERE i.trash = 0 AND i.published = 1
+              AND i.created >= DATE_SUB(NOW(), INTERVAL 12 MONTH)
+            ORDER BY DATE(i.created) DESC, i.hits DESC";
+        $db->setQuery($query);
+        $all = $db->loadObjectList();
+
+        $grouped = [];
+        foreach ($all as $row) {
+            if (!isset($grouped[$row->day_date])) {
+                $grouped[$row->day_date] = [];
+            }
+            if (count($grouped[$row->day_date]) < 10) {
+                $grouped[$row->day_date][] = $row;
+            }
+        }
+        return $grouped;
+    }
+
 }

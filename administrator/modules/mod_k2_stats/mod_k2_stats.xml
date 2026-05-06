@@ -11,16 +11,13 @@
     <files>
         <filename module="mod_k2_stats">mod_k2_stats.php</filename>
         <file>helper.php</file>
+        <file>ajax.php</file>
         <folder>tmpl</folder>
     </files>
     <config>
         <fields name="params">
             <fieldset name="basic">
                 <field name="latestItems" type="radio" default="1" label="K2_LATEST_ITEMS_TAB" class="btn-group btn-group-yesno">
-                    <option value="0">K2_DISABLE</option>
-                    <option value="1">K2_ENABLE</option>
-                </field>
-                <field name="popularItems30" type="radio" default="1" label="JMONTH" class="btn-group btn-group-yesno">
                     <option value="0">K2_DISABLE</option>
                     <option value="1">K2_ENABLE</option>
                 </field>
@@ -37,6 +34,10 @@
                     <option value="1">K2_ENABLE</option>
                 </field>
                 <field name="statistics" type="radio" default="1" label="K2_STATISTICS_TAB" class="btn-group btn-group-yesno">
+                    <option value="0">K2_DISABLE</option>
+                    <option value="1">K2_ENABLE</option>
+                </field>
+                <field name="hitsPerMonth" type="radio" default="1" label="Klicks pro Monat" class="btn-group btn-group-yesno">
                     <option value="0">K2_DISABLE</option>
                     <option value="1">K2_ENABLE</option>
                 </field>

@@ -156,6 +156,224 @@ $selector = 'k2StatsTabs'.$module->id;
     <?php echo HTMLHelper::_('uitab.endTab'); ?>
 <?php endif; ?>
 
+<?php if($params->get('hitsPerMonth', 1)): ?>
+    <?php echo HTMLHelper::_('uitab.addTab', $selector, 'hitsPerMonthTab'.$module->id, Text::_('K2_HITS')); ?>
+    <?php
+    $monthNames = ['', 'Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
+    $monthNamesFull = ['', 'Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
+    $chartLabels = [];
+    $chartData = [];
+    foreach ($hitsPerMonth as $row) {
+        $chartLabels[] = $monthNames[(int)$row->mn] . ' ' . substr($row->yr, 2);
+        $chartData[] = (int)$row->total_hits;
+    }
+    ?>
+    <div id="k2HitsPerMonth<?php echo $module->id; ?>">
+        <div style="height:250px;margin-bottom:15px;"><canvas id="k2HitsChart<?php echo $module->id; ?>"></canvas></div>
+        <div id="k2HitsBreadcrumb<?php echo $module->id; ?>" style="margin-bottom:10px;font-weight:bold;"></div>
+        <table class="adminlist table table-striped" id="k2HitsTable<?php echo $module->id; ?>">
+            <thead>
+            <tr>
+                <td class="title">Monat</td>
+                <td class="title" style="text-align:right"><?php echo Text::_('K2_HITS'); ?></td>
+                <td class="title" style="text-align:right">Artikel</td>
+                <td class="title" style="text-align:right">&#8709; / Artikel</td>
+            </tr>
+            </thead>
+            <tbody>
+            <?php foreach(array_reverse($hitsPerMonth) as $row):
+                $avg = (int)$row->num_items > 0 ? round((int)$row->total_hits / (int)$row->num_items) : 0;
+            ?>
+                <tr>
+                    <td><a href="#" class="k2-drill-month" data-year="<?php echo (int)$row->yr; ?>" data-month="<?php echo (int)$row->mn; ?>"><?php echo $monthNamesFull[(int)$row->mn] . ' ' . (int)$row->yr; ?></a></td>
+                    <td style="text-align:right"><?php echo number_format((int)$row->total_hits, 0, ',', '.'); ?></td>
+                    <td style="text-align:right"><?php echo (int)$row->num_items; ?></td>
+                    <td style="text-align:right"><?php echo number_format($avg, 0, ',', '.'); ?></td>
+                </tr>
+            <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+    <?php
+    $daysByMonth = [];
+    foreach ($hitsPerDay as $d) {
+        $key = (int)$d->yr . '-' . (int)$d->mn;
+        $daysByMonth[$key][] = $d;
+    }
+    $itemsByDay = [];
+    foreach ($topItemsPerDay as $date => $items) {
+        $itemsByDay[$date] = [];
+        foreach ($items as $item) {
+            $itemsByDay[$date][] = [
+                'id' => $item->id,
+                'title' => $item->title,
+                'hits' => (int)$item->hits,
+                'author' => $item->author
+            ];
+        }
+    }
+    $itemsByMonth = [];
+    foreach ($topItemsPerMonth as $key => $items) {
+        $itemsByMonth[$key] = [];
+        foreach ($items as $item) {
+            $itemsByMonth[$key][] = [
+                'id' => $item->id,
+                'title' => $item->title,
+                'hits' => (int)$item->hits,
+                'author' => $item->author
+            ];
+        }
+    }
+    ?>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+    <script>
+    (function(){
+        var modId = <?php echo $module->id; ?>;
+        var monthNames = <?php echo json_encode($monthNamesFull); ?>;
+        var hitsLabel = <?php echo json_encode(Text::_('K2_HITS')); ?>;
+        var dayData = <?php echo json_encode($daysByMonth); ?>;
+        var itemData = <?php echo json_encode($itemsByDay); ?>;
+        var monthItemData = <?php echo json_encode($itemsByMonth); ?>;
+        var tableEl = document.getElementById('k2HitsTable' + modId);
+        var originalHTML = tableEl.innerHTML;
+        var chartWrapper = document.getElementById('k2HitsChart' + modId).parentNode;
+        var chartCanvas = document.getElementById('k2HitsChart' + modId);
+
+        var chart = new Chart(chartCanvas, {
+            type: 'bar',
+            data: {
+                labels: <?php echo json_encode($chartLabels); ?>,
+                datasets: [{
+                    label: hitsLabel,
+                    data: <?php echo json_encode($chartData); ?>,
+                    backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1,
+                    borderRadius: 3
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(ctx) { return ctx.parsed.y.toLocaleString('de-DE') + ' ' + hitsLabel; }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { callback: function(v) { return v.toLocaleString('de-DE'); } }
+                    }
+                }
+            }
+        });
+
+        function setBreadcrumb(html) {
+            document.getElementById('k2HitsBreadcrumb' + modId).innerHTML = html;
+        }
+
+        function removeTopDiv() {
+            var el = document.getElementById('k2MonthTop' + modId);
+            if (el) el.remove();
+        }
+
+        function resetToMonths() {
+            removeTopDiv();
+            tableEl.innerHTML = originalHTML;
+            setBreadcrumb('');
+            chartWrapper.style.display = '';
+            bindMonthLinks();
+        }
+
+        function bindMonthLinks() {
+            tableEl.querySelectorAll('.k2-drill-month').forEach(function(link) {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    drillMonth(parseInt(this.dataset.year), parseInt(this.dataset.month));
+                });
+            });
+        }
+
+        function drillMonth(year, month) {
+            removeTopDiv();
+            chartWrapper.style.display = 'none';
+            var key = year + '-' + month;
+            var data = dayData[key] || [];
+
+            setBreadcrumb('<a href="#" id="k2BackToMonths' + modId + '">Monate</a> &raquo; ' + monthNames[month] + ' ' + year);
+            document.getElementById('k2BackToMonths' + modId).addEventListener('click', function(e) { e.preventDefault(); resetToMonths(); });
+
+            var thead = '<tr><td class="title">Tag</td><td class="title" style="text-align:right">' + hitsLabel + '</td><td class="title" style="text-align:right">Artikel</td><td class="title" style="text-align:right">&#8709; / Artikel</td></tr>';
+            var tbody = '';
+            data.forEach(function(row) {
+                var hits = Number(row.total_hits);
+                var items = Number(row.num_items);
+                var avg = items > 0 ? Math.round(hits / items) : 0;
+                var dateStr = year + '-' + String(month).padStart(2,'0') + '-' + String(row.dy).padStart(2,'0');
+                tbody += '<tr><td><a href="#" class="k2-drill-day" data-date="' + dateStr + '" data-year="' + year + '" data-month="' + month + '" data-day="' + row.dy + '">' + row.dy + '. ' + monthNames[month] + '</a></td>';
+                tbody += '<td style="text-align:right">' + hits.toLocaleString('de-DE') + '</td>';
+                tbody += '<td style="text-align:right">' + items + '</td>';
+                tbody += '<td style="text-align:right">' + avg.toLocaleString('de-DE') + '</td></tr>';
+            });
+            if (!tbody) tbody = '<tr><td colspan="4">Keine Daten</td></tr>';
+
+            var topItems = monthItemData[key] || [];
+            var topHtml = '';
+            if (topItems.length) {
+                topHtml = '<h4 style="margin:20px 0 8px">Top 10 Artikel – ' + monthNames[month] + ' ' + year + '</h4>';
+                topHtml += '<table class="adminlist table table-striped"><thead><tr><td class="title">Titel</td><td class="title" style="text-align:right">' + hitsLabel + '</td><td class="title">Autor</td></tr></thead><tbody>';
+                topItems.forEach(function(row) {
+                    topHtml += '<tr><td><a href="index.php?option=com_k2&view=item&cid=' + row.id + '">' + row.title + '</a></td>';
+                    topHtml += '<td style="text-align:right">' + Number(row.hits).toLocaleString('de-DE') + '</td>';
+                    topHtml += '<td>' + (row.author || '') + '</td></tr>';
+                });
+                topHtml += '</tbody></table>';
+            }
+
+            tableEl.innerHTML = '<thead>' + thead + '</thead><tbody>' + tbody + '</tbody>';
+            tableEl.insertAdjacentHTML('afterend', '<div id="k2MonthTop' + modId + '">' + topHtml + '</div>');
+
+            tableEl.querySelectorAll('.k2-drill-day').forEach(function(link) {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    drillDay(this.dataset.date, parseInt(this.dataset.year), parseInt(this.dataset.month), parseInt(this.dataset.day));
+                });
+            });
+        }
+
+        function drillDay(dateStr, year, month, day) {
+            removeTopDiv();
+            var data = itemData[dateStr] || [];
+
+            setBreadcrumb(
+                '<a href="#" id="k2BackToMonths2' + modId + '">Monate</a> &raquo; ' +
+                '<a href="#" id="k2BackToMonth' + modId + '">' + monthNames[month] + ' ' + year + '</a> &raquo; ' +
+                day + '. ' + monthNames[month]
+            );
+            document.getElementById('k2BackToMonths2' + modId).addEventListener('click', function(e) { e.preventDefault(); resetToMonths(); });
+            document.getElementById('k2BackToMonth' + modId).addEventListener('click', function(e) { e.preventDefault(); drillMonth(year, month); });
+
+            var thead = '<tr><td class="title">Titel</td><td class="title" style="text-align:right">' + hitsLabel + '</td><td class="title">Autor</td></tr>';
+            var tbody = '';
+            data.forEach(function(row) {
+                tbody += '<tr><td><a href="index.php?option=com_k2&view=item&cid=' + row.id + '">' + row.title + '</a></td>';
+                tbody += '<td style="text-align:right">' + Number(row.hits).toLocaleString('de-DE') + '</td>';
+                tbody += '<td>' + (row.author || '') + '</td></tr>';
+            });
+            if (!tbody) tbody = '<tr><td colspan="3">Keine Artikel an diesem Tag</td></tr>';
+            tableEl.innerHTML = '<thead>' + thead + '</thead><tbody>' + tbody + '</tbody>';
+        }
+
+        bindMonthLinks();
+    })();
+    </script>
+    <?php echo HTMLHelper::_('uitab.endTab'); ?>
+<?php endif; ?>
+
 <?php if($params->get('statistics', 1)): ?>
     <?php echo HTMLHelper::_('uitab.addTab', $selector, 'statsTab'.$module->id, Text::_('K2_STATISTICS')); ?>
     <table class="adminlist table table-striped">
