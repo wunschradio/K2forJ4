@@ -327,6 +327,8 @@ class K2ModelItemlist extends K2Model
             } else {
                 $countQuery = "/* Frontend / K2 / Items Count */ SELECT COUNT(*)" . $query;
             }
+            // Zählabfrage ebenfalls durch die K2-Plugins (z. B. weitere Kategorien), sonst stimmt die Seitenzahl nicht
+            Factory::getApplication()->triggerEvent('onK2BeforeSetQuery', array(&$countQuery));
             $db->setQuery($countQuery);
             $this->getTotal = $db->loadResult();
         }
