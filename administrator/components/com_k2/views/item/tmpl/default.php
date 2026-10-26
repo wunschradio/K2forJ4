@@ -415,6 +415,8 @@ $app = Factory::getApplication();
                                             <?php if ($galleryDraft) : ?>
                                                 <input type="hidden" name="k2gallery_draft" value="<?php echo $galleryDraft; ?>">
                                             <?php endif; ?>
+                                            <?php // Modal-Skript selbst laden: bei neuen Beiträgen bindet es sonst niemand ein ?>
+                                            <?php HTMLHelper::_('bootstrap.modal'); ?>
                                             <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#k2GalleryModal">
                                                 <?php echo Text::_('K2_COM_BE_ITEM_SIGPRO_UPLOAD'); ?>
                                             </button>
