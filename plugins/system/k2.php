@@ -40,8 +40,8 @@ class plgSystemK2 extends CMSPlugin
         }
 
         // Define K2 version & build here
-        define('K2_CURRENT_VERSION', '2.11.0');
-        define('K2_BUILD_ID', '20220701');
+        define('K2_CURRENT_VERSION', '2.28.0');
+        define('K2_BUILD_ID', '20260607');
         define('K2_BUILD', '<br />[Build ' . K2_BUILD_ID . ']'); // Use '' for LTS (?) or "<br />[Build '.K2_BUILD_ID.']" for rolling build (release)
 
         // Define the DS constant (for backwards compatibility with old template overrides & 3rd party K2 extensions)
@@ -501,7 +501,7 @@ class plgSystemK2 extends CMSPlugin
             $value = $currentValue;
         } elseif ($row->type == 'multipleSelect' || $row->type == 'link') {
             foreach ($jsonObject as $option) {
-                if (@in_array($option->value, $currentValue)) {
+                if (is_array($currentValue) && in_array($option->value, $currentValue)) {
                     $value .= $option->name . ' ';
                 }
             }
@@ -538,7 +538,7 @@ class plgSystemK2 extends CMSPlugin
 
         if (isset($item)) {
             $currentValues = json_decode($item->extra_fields);
-            if (count($currentValues)) {
+            if (is_array($currentValues) && count($currentValues)) {
                 foreach ($currentValues as $value) {
                     if ($value->id == $extraField->id) {
                         $active = $value->value;

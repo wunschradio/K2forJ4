@@ -79,10 +79,11 @@ class modK2StatsHelper
 
     public static function getStatistics()
     {
-        $statistics = new stdClass;
+        $statistics = new stdClass();
         $statistics->numOfItems = self::countItems();
-        $statistics->numOfTrashedItems = self::countTrashedItems();
+        $statistics->numOfDraftItems = self::countDraftItems();
         $statistics->numOfFeaturedItems = self::countFeaturedItems();
+        $statistics->numOfTrashedItems = self::countTrashedItems();
         $statistics->numOfComments = self::countComments();
         $statistics->numOfCategories = self::countCategories();
         $statistics->numOfTrashedCategories = self::countTrashedCategories();
@@ -96,6 +97,15 @@ class modK2StatsHelper
     {
         $db = Factory::getDbo();
         $query = "SELECT COUNT(*) FROM #__k2_items";
+        $db->setQuery($query);
+        $result = $db->loadResult();
+        return $result;
+    }
+
+    public static function countDraftItems()
+    {
+        $db = Factory::getDbo();
+        $query = "SELECT COUNT(*) FROM #__k2_items WHERE published=0 AND trash=0";
         $db->setQuery($query);
         $result = $db->loadResult();
         return $result;

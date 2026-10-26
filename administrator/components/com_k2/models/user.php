@@ -20,7 +20,7 @@ use Joomla\CMS\Language\Text;
 
 jimport('joomla.application.component.model');
 
-Table::addIncludePath(JPATH_COMPONENT . '/tables');
+Table::addIncludePath(JPATH_ADMINISTRATOR . '/components/com_k2/tables');
 
 class K2ModelUser extends K2Model
 {
@@ -69,26 +69,38 @@ class K2ModelUser extends K2Model
 
         $file = Factory::getApplication()->input->files->getArray($_FILES);
 
-        require_once(JPATH_SITE . '/media/k2/assets/vendors/verot/class.upload.php/src/class.upload.php');
-        $savepath = JPATH_ROOT . '/media/k2/users/';
-
         if (isset($file['image']) && $file['image']['error'] == 0 && !Factory::getApplication()->input->getBool('del_image')) {
-            $handle = new Upload($file['image']);
-            $handle->allowed = array('image/*');
-            if ($handle->uploaded) {
-                $handle->file_auto_rename = false;
-                $handle->file_overwrite = true;
-                $handle->file_new_name_body = $row->id;
-                $handle->image_resize = true;
-                $handle->image_ratio_y = true;
-                $handle->image_x = $params->get('userImageWidth', '100');
-                $handle->Process($savepath);
-                $handle->Clean();
-            } else {
-                $app->enqueueMessage($handle->error, 'error');
+            require_once JPATH_SITE . '/media/k2/assets/vendors/verot/class.upload.php/src/class.upload.php';
+            $savepath = JPATH_ROOT . '/media/k2/users/';
+
+            try {
+                $handle = new \Verot\Upload\Upload($file['image']);
+                $handle->allowed = array('image/*');
+                $handle->forbidden = array('image/bmp', 'image/tiff');
+
+                if ($handle->uploaded) {
+                    $handle->file_auto_rename = false;
+                    $handle->file_new_name_body = $row->id;
+                    $handle->file_overwrite = true;
+                    $handle->image_convert = 'webp';
+                    $handle->image_ratio_y = true;
+                    $handle->image_resize = true;
+                    $handle->image_x = $params->get('userImageWidth', '100');
+                    $handle->webp_quality = $params->get('imagesQuality', '90');
+
+                    $handle->process($savepath);
+
+                    if ($handle->processed) {
+                        $handle->clean();
+                        $row->image = $handle->file_dst_name;
+                    } else {
+                        throw new \RuntimeException($handle->error);
+                    }
+                }
+            } catch (\Exception $e) {
+                $app->enqueueMessage(Text::_('K2_COULD_NOT_UPLOAD_YOUR_IMAGE') . $e->getMessage(), 'error');
                 $app->redirect('index.php?option=com_k2&view=users');
             }
-            $row->image = $handle->file_dst_name;
         }
 
         if (Factory::getApplication()->input->getBool('del_image')) {

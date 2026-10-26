@@ -19,7 +19,7 @@ use Joomla\CMS\Language\Text;
 
 jimport('joomla.application.component.model');
 
-Table::addIncludePath(JPATH_COMPONENT . '/tables');
+Table::addIncludePath(JPATH_ADMINISTRATOR . '/components/com_k2/tables');
 
 class K2ModelExtraFields extends K2Model
 {
@@ -47,8 +47,9 @@ class K2ModelExtraFields extends K2Model
         }
 
         if ($search) {
-            $escaped = $db->escape($search, true);
-            $query .= " AND LOWER( exf.name ) LIKE " . $db->Quote('%' . $escaped . '%', false);
+            $query .= K2GlobalHelper::search($search, [
+                'exf.name',
+            ]);
         }
 
         if ($filter_type) {
@@ -96,8 +97,9 @@ class K2ModelExtraFields extends K2Model
         }
 
         if ($search) {
-            $escaped = $db->escape($search, true);
-            $query .= " AND LOWER( name ) LIKE " . $db->Quote('%' . $escaped . '%', false);
+            $query .= K2GlobalHelper::search($search, [
+                'name',
+            ]);
         }
 
         if ($filter_type) {
@@ -150,7 +152,7 @@ class K2ModelExtraFields extends K2Model
         $cid = Factory::getApplication()->input->getVar('cid', array(0), 'post', 'array');
         $total = count($cid);
         $order = Factory::getApplication()->input->getVar('order', array(0), 'post', 'array');
-        ArrayHelper::toInteger($order, array(0));
+        $order = ArrayHelper::toInteger($order, array(0));
         $groupings = array();
         for ($i = 0; $i < $total; $i++) {
             $row = Table::getInstance('K2ExtraField', 'Table');
@@ -324,7 +326,7 @@ class K2ModelExtraFields extends K2Model
         $app = Factory::getApplication();
         $db =  Factory::getDbo();
         $cid = Factory::getApplication()->input->getVar('cid');
-        ArrayHelper::toInteger($cid);
+        $cid = ArrayHelper::toInteger($cid);
         foreach ($cid as $id) {
             $row = Table::getInstance('K2ExtraFieldsGroup', 'Table');
             $row->load($id);

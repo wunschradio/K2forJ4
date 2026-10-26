@@ -162,6 +162,7 @@ class K2ControllerComments extends K2Controller
 
     public function reportSpammer()
     {
+        Session::checkToken('get') or jexit('Invalid Token');
         $app = Factory::getApplication();
         $user = Factory::getUser();
         $format = Factory::getApplication()->input->getVar('format');

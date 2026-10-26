@@ -14,6 +14,12 @@ use Joomla\CMS\Table\Table;
 use Joomla\CMS\Language\Text;
 use Joomla\CMS\Factory;
 use Joomla\CMS\Form\FormField;
+use Joomla\CMS\HTML\HTMLHelper;
+use Joomla\CMS\Uri\Uri;
+
+require_once JPATH_ADMINISTRATOR . '/components/com_k2/lib/k2filesystem.php';
+
+use K2File as File;
 
 require_once(JPATH_ADMINISTRATOR . '/components/com_k2/elements/base.php');
 
@@ -51,6 +57,9 @@ class K2ElementK2modalselector extends K2Element
             $saved = $value;
         }
 
+        // Date format
+        $dateFormat = Text::_('K2_J16_DATE_FORMAT');
+
         // Output
         $output = '';
 
@@ -66,11 +75,28 @@ class K2ElementK2modalselector extends K2Element
             ';
 
             foreach ($saved as $value) {
+                $entryClass = '';
+                $entryDate = '';
+                $entryImage = '';
+
                 if ($scope == 'items') {
                     $row = Table::getInstance('K2Item', 'Table');
                     $row->load($value);
                     $entryName = $row->title;
                     $entryValue = $row->id;
+                    $entryDate = '<br /><b>' . HTMLHelper::_('date', $row->created, $dateFormat) . '</b>';
+                    if (File::exists(JPATH_SITE . '/media/k2/items/cache/' . md5("Image" . $row->id) . '_XS.jpg')) {
+                        $entryImage = '<img src="' . Uri::root(true) . '/media/k2/items/cache/' . md5("Image" . $row->id) . '_XS.jpg" />';
+                    } else {
+                        $entryImage = '<img src="' . Uri::root(true) . '/media/k2/assets/images/backend/placeholder.svg" />';
+                    }
+                    $entryClass = ' k2EntryItem';
+                    if ($row->published == 0) {
+                        $entryClass .= ' k2EntryItemUnpublished';
+                    }
+                    if ($row->trash == 1) {
+                        $entryClass .= ' k2EntryItemTrashed';
+                    }
                 }
                 if ($scope == 'categories') {
                     $row = Table::getInstance('K2Category', 'Table');
@@ -89,10 +115,14 @@ class K2ElementK2modalselector extends K2Element
                     $db->setQuery($query);
                     $row = $db->loadObject();
                     $entryName = $row->name;
-                    $entryValue = htmlspecialchars($row->name, ENT_QUOTES, 'utf-8');
+                    $entryValue = htmlspecialchars($row->name, ENT_QUOTES, 'UTF-8');
                 }
 
-                $output .= '<li class="handle"><a class="k2EntryRemove" href="#" title="' . Text::_('K2_REMOVE_THIS_ENTRY') . '"><i class="fa fa-trash-o"></i></a><span class="k2EntryText">' . $entryName . '</span><input type="hidden" name="' . $fieldName . '" value="' . $entryValue . '" /></li>';
+                $output .= '<li class="handle' . $entryClass . '">';
+                if ($entryImage) {
+                    $output .= '<span class="k2EntryImage">' . $entryImage . '</span>';
+                }
+                $output .= '<a class="k2EntryRemove" href="#" title="' . Text::_('K2_REMOVE_THIS_ENTRY') . '"><i class="fa fa-trash-o"></i></a><span class="k2EntryText">' . $entryName . $entryDate . '</span><input type="hidden" name="' . $fieldName . '" value="' . $entryValue . '" /></li>';
             }
             $output .= '
             </ul>
@@ -140,7 +170,7 @@ class K2ElementK2modalselector extends K2Element
                     $db->setQuery($query);
                     $row = $db->loadObject();
                     $entryName = $row->name;
-                    $entryValue = htmlspecialchars($row->name, ENT_QUOTES, 'utf-8');
+                    $entryValue = htmlspecialchars($row->name, ENT_QUOTES, 'UTF-8');
                 }
                 $view = "tags";
             }

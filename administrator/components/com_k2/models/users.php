@@ -23,7 +23,9 @@ use Joomla\Registry\Registry;
 
 jimport('joomla.application.component.model');
 
-Table::addIncludePath(JPATH_COMPONENT . '/tables');
+Table::addIncludePath(JPATH_ADMINISTRATOR . '/components/com_k2/tables');
+
+JLoader::register('K2GlobalHelper', JPATH_SITE . '/media/k2/assets/helpers/global.php');
 
 class K2ModelUsers extends K2Model
 {
@@ -35,14 +37,14 @@ class K2ModelUsers extends K2Model
         $db = Factory::getDbo();
         $limit = $app->getUserStateFromRequest('global.list.limit', 'limit', $app->getCfg('list_limit'), 'int');
         $limitstart = $app->getUserStateFromRequest($option . $view . '.limitstart', 'limitstart', 0, 'int');
+
+        $search = $app->getUserStateFromRequest($option . $view . 'search', 'search', '', 'string');
+
         $filter_order = $app->getUserStateFromRequest($option . $view . 'filter_order', 'filter_order', 'juser.name', 'cmd');
         $filter_order_Dir = $app->getUserStateFromRequest($option . $view . 'filter_order_Dir', 'filter_order_Dir', '', 'word');
         $filter_status = $app->getUserStateFromRequest($option . $view . 'filter_status', 'filter_status', -1, 'int');
         $filter_group = $app->getUserStateFromRequest($option . $view . 'filter_group', 'filter_group', '', 'string');
         $filter_group_k2 = $app->getUserStateFromRequest($option . $view . 'filter_group_k2', 'filter_group_k2', '', 'string');
-        $search = $app->getUserStateFromRequest($option . $view . 'search', 'search', '', 'string');
-        $search = StringHelper::strtolower($search);
-        $search = trim(preg_replace('/[^\p{L}\p{N}\s\-_]/u', '', $search));
 
         $query = "SELECT juser.*, k2user.group, k2group.name AS groupname, k2user.image AS image
             FROM #__users AS juser
@@ -69,8 +71,11 @@ class K2ModelUsers extends K2Model
         }
 
         if ($search) {
-            $escaped = $db->escape($search, true);
-            $query .= " AND (LOWER(juser.name) LIKE " . $db->Quote('%' . $escaped . '%', false) . " OR LOWER(juser.email) LIKE " . $db->Quote('%' . $escaped . '%', false) . ")";
+            $query .= K2GlobalHelper::search($search, array(
+                'juser.name',
+                'juser.username',
+                'juser.email',
+            ));
         }
 
         if (!$filter_order) {
@@ -115,11 +120,14 @@ class K2ModelUsers extends K2Model
         $filter_status = $app->getUserStateFromRequest($option . $view . 'filter_status', 'filter_status', -1, 'int');
         $filter_group = $app->getUserStateFromRequest($option . $view . 'filter_group', 'filter_group', '', 'string');
         $filter_group_k2 = $app->getUserStateFromRequest($option . $view . 'filter_group_k2', 'filter_group_k2', '', 'string');
-        $search = $app->getUserStateFromRequest($option . $view . 'search', 'search', '', 'string');
-        $search = StringHelper::strtolower($search);
-        $search = trim(preg_replace('/[^\p{L}\p{N}\s\-_]/u', '', $search));
 
-        $query = "SELECT COUNT(DISTINCT juser.id) FROM #__users as juser " . "LEFT JOIN #__k2_users as k2user ON juser.id=k2user.userID " . "LEFT JOIN #__k2_user_groups as k2group ON k2user.group=k2group.id ";
+        $search = $app->getUserStateFromRequest($option . $view . 'search', 'search', '', 'string');
+
+        $query = "SELECT COUNT(DISTINCT juser.id)
+            FROM #__users as juser
+            LEFT JOIN #__k2_users as k2user ON juser.id=k2user.userID
+            LEFT JOIN #__k2_user_groups as k2group ON k2user.group=k2group.id
+        ";
 
         if ($filter_group) {
             $query .= " LEFT JOIN #__user_usergroup_map as `map` ON juser.id=map.user_id ";
@@ -140,8 +148,11 @@ class K2ModelUsers extends K2Model
         }
 
         if ($search) {
-            $escaped = $db->escape($search, true);
-            $query .= " AND (LOWER( juser.name ) LIKE " . $db->Quote('%' . $escaped . '%', false) . " OR LOWER( juser.email ) LIKE " . $db->Quote('%' . $escaped . '%', false) . ")";
+            $query .= K2GlobalHelper::search($search, array(
+                'juser.name',
+                'juser.username',
+                'juser.email',
+            ));
         }
 
         $db->setQuery($query);
@@ -153,7 +164,7 @@ class K2ModelUsers extends K2Model
     {
         $app = Factory::getApplication();
         $cid = Factory::getApplication()->input->getVar('cid');
-        ArrayHelper::toInteger($cid);
+        $cid = ArrayHelper::toInteger($cid);
         $db = Factory::getDbo();
         $query = "DELETE FROM #__k2_users WHERE userID IN(" . implode(',', $cid) . ")";
         $db->setQuery($query);
@@ -228,7 +239,7 @@ class K2ModelUsers extends K2Model
     {
         $app = Factory::getApplication();
         $cid = Factory::getApplication()->input->getVar('cid');
-        ArrayHelper::toInteger($cid);
+        $cid = ArrayHelper::toInteger($cid);
         $db = Factory::getDbo();
         $query = "UPDATE #__users SET block=0 WHERE id IN(" . implode(',', $cid) . ")";
         $db->setQuery($query);
@@ -245,7 +256,7 @@ class K2ModelUsers extends K2Model
     {
         $app = Factory::getApplication();
         $cid = Factory::getApplication()->input->getVar('cid');
-        ArrayHelper::toInteger($cid);
+        $cid = ArrayHelper::toInteger($cid);
         $db = Factory::getDbo();
         $query = "UPDATE #__users SET block=1 WHERE id IN(" . implode(',', $cid) . ")";
         $db->setQuery($query);
@@ -263,7 +274,7 @@ class K2ModelUsers extends K2Model
         $app = Factory::getApplication();
         $user = Factory::getUser();
         $cid = Factory::getApplication()->input->getVar('cid');
-        ArrayHelper::toInteger($cid);
+        $cid = ArrayHelper::toInteger($cid);
         $db = Factory::getDbo();
         if (in_array($user->id, $cid)) {
             foreach ($cid as $key => $id) {
@@ -323,10 +334,10 @@ class K2ModelUsers extends K2Model
         $app = Factory::getApplication();
         $db = Factory::getDbo();
         $cid = Factory::getApplication()->input->getVar('cid');
-        ArrayHelper::toInteger($cid);
+        $cid = ArrayHelper::toInteger($cid);
         $group = Factory::getApplication()->input->getVar('group');
         $k2group = Factory::getApplication()->input->getInt('k2group');
-        ArrayHelper::toInteger($group);
+        $group = ArrayHelper::toInteger($group);
         $group = array_filter($group);
         if (count($group)) {
             foreach ($cid as $id) {

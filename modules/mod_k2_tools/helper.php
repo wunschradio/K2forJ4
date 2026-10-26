@@ -36,7 +36,7 @@ class modK2ToolsHelper
         if ($cid > 0) {
             $categories = modK2ToolsHelper::getCategoryChildren($cid);
             $categories[] = $cid;
-            ArrayHelper::toInteger($categories);
+            $categories = ArrayHelper::toInteger($categories);
             $where = " catid IN(" . implode(',', $categories) . ") AND ";
         }
 
@@ -225,7 +225,7 @@ class modK2ToolsHelper
                 }
             }
             $categories = @array_unique($categories);
-            ArrayHelper::toInteger($categories);
+            $categories = ArrayHelper::toInteger($categories);
             if (count($categories) == 1) {
                 $query .= " AND i.catid={$categories[0]}";
             } else {
@@ -305,16 +305,16 @@ class modK2ToolsHelper
                     if ($params->get('getChildren')) {
                         $itemListModel = K2Model::getInstance('Itemlist', 'K2Model');
                         $categories = $itemListModel->getCategoryTree($cid);
-                        $result = @implode(',', $categories);
+                        $result = (is_array($categories) && count($categories)) ? implode(',', $categories) : '0';
                     } else {
-                        ArrayHelper::toInteger($cid);
+                        $cid = ArrayHelper::toInteger($cid);
                         $result = implode(',', $cid);
                     }
                 } else {
                     if ($params->get('getChildren')) {
                         $itemListModel = K2Model::getInstance('Itemlist', 'K2Model');
                         $categories = $itemListModel->getCategoryTree($cid);
-                        $result = @implode(',', $categories);
+                        $result = (is_array($categories) && count($categories)) ? implode(',', $categories) : '0';
                     } else {
                         $result = (int)$cid;
                     }

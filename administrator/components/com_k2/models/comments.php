@@ -18,12 +18,15 @@ use Joomla\CMS\Language\Text;
 
 jimport('joomla.application.component.model');
 
-Table::addIncludePath(JPATH_COMPONENT . '/tables');
+Table::addIncludePath(JPATH_ADMINISTRATOR . '/components/com_k2/tables');
+
+JLoader::register('K2GlobalHelper', JPATH_SITE . '/media/k2/assets/helpers/global.php');
 
 class K2ModelComments extends K2Model
 {
+    private $getTotal = 0;
 
-    function getData()
+    public function getData()
     {
         $app = Factory::getApplication();
         $params = ComponentHelper::getParams('com_k2');
@@ -38,183 +41,67 @@ class K2ModelComments extends K2Model
         $filter_category = $app->getUserStateFromRequest($option . $view . 'filter_category', 'filter_category', 0, 'int');
         $filter_author = $app->getUserStateFromRequest($option . $view . 'filter_author', 'filter_author', 0, 'int');
         $search = $app->getUserStateFromRequest($option . $view . 'search', 'search', '', 'string');
-        $search = StringHelper::strtolower($search);
-        $search = trim(preg_replace('/[^\p{L}\p{N}\s\"\.\@\-_]/u', '', $search));
 
-        $query = "SELECT c.*, i.title , i.catid,  i.alias AS itemAlias, i.created_by,  cat.alias AS catAlias, cat.name as catName FROM #__k2_comments AS c LEFT JOIN #__k2_items AS i ON c.itemID=i.id LEFT JOIN #__k2_categories AS cat ON cat.id=i.catid LEFT JOIN #__k2_users AS u ON c.userID=u.userID WHERE c.id>0";
+        $queryStart = "/* Backend / K2 / Comments */ SELECT c.*, i.title, i.catid, i.alias AS itemAlias, i.created_by, cat.alias AS catAlias, cat.name as catName";
+
+        // FROM + conditions (shared by the data and the count query)
+        $query = " FROM #__k2_comments AS c
+            LEFT JOIN #__k2_items AS i ON c.itemID = i.id
+            LEFT JOIN #__k2_categories AS cat ON cat.id = i.catid
+            LEFT JOIN #__k2_users AS u ON c.userID = u.userID
+            WHERE c.id > 0";
 
         if ($filter_state > -1) {
-            $query .= " AND c.published={$filter_state}";
+            $query .= " AND c.published = {$filter_state}";
         }
 
         if ($filter_category) {
-            $query .= " AND i.catid={$filter_category}";
+            $query .= " AND i.catid = {$filter_category}";
         }
 
         if ($filter_author) {
-            $query .= " AND i.created_by={$filter_author}";
+            $query .= " AND i.created_by = {$filter_author}";
         }
 
         if ($search) {
-
-            // Detect exact search phrase using double quotes in search string
-            if (substr($search, 0, 1) == '"' && substr($search, -1) == '"') {
-                $exact = true;
+            if ($params->get('adminSearch') == 'full') {
+                $query .= K2GlobalHelper::search($search, array(
+                    'c.commentText',
+                    'c.userName',
+                    'c.commentEmail',
+                    'c.commentURL',
+                    'i.title',
+                    'u.userName',
+                    'u.ip',
+                ));
             } else {
-                $exact = false;
-            }
-
-            // Now completely strip double quotes
-            $search = trim(str_replace('"', '', $search));
-
-            // Escape remaining string
-            $escaped = $db->escape($search, true);
-
-            // Full phrase or set of words
-            if (strpos($escaped, ' ') !== false && !$exact) {
-                $escaped = explode(' ', $escaped);
-                $quoted = array();
-                foreach ($escaped as $key => $escapedWord) {
-                    $quoted[] = $db->Quote('%' . $escapedWord . '%', false);
-                }
-                if ($params->get('adminSearch') == 'full') {
-                    foreach ($quoted as $quotedWord) {
-                        $query .= " AND ( " .
-                            "LOWER(c.commentText) LIKE " . $quotedWord . " " .
-                            "OR LOWER(c.userName) LIKE " . $quotedWord . " " .
-                            "OR LOWER(c.commentEmail) LIKE " . $quotedWord . " " .
-                            "OR LOWER(c.commentURL) LIKE " . $quotedWord . " " .
-                            "OR LOWER(i.title) LIKE " . $quotedWord . " " .
-                            "OR LOWER(u.userName) LIKE " . $quotedWord . " " .
-                            "OR LOWER(u.ip) LIKE " . $quotedWord . " " .
-                            " )";
-                    }
-                } else {
-                    foreach ($quoted as $quotedWord) {
-                        $query .= " AND LOWER(c.commentText) LIKE " . $quotedWord;
-                    }
-                }
-            } // Single word or exact phrase to search for (wrapped in double quotes in the search block)
-            else {
-                $quoted = $db->Quote('%' . $escaped . '%', false);
-
-                if ($params->get('adminSearch') == 'full') {
-                    $query .= " AND ( " .
-                        "LOWER(c.commentText) LIKE " . $quoted . " " .
-                        "OR LOWER(c.userName) LIKE " . $quoted . " " .
-                        "OR LOWER(c.commentEmail) LIKE " . $quoted . " " .
-                        "OR LOWER(c.commentURL) LIKE " . $quoted . " " .
-                        "OR LOWER(i.title) LIKE " . $quoted . " " .
-                        "OR LOWER(u.userName) LIKE " . $quoted . " " .
-                        "OR LOWER(u.ip) LIKE " . $quoted . " " .
-                        " )";
-                } else {
-                    $query .= " AND LOWER(c.commentText) LIKE " . $quoted;
-                }
+                $query .= K2GlobalHelper::search($search, array(
+                    'c.commentText',
+                ));
             }
         }
 
         if (!$filter_order) {
             $filter_order = "c.commentDate";
         }
+        $queryEnd = " ORDER BY {$filter_order} {$filter_order_Dir}";
 
-        $query .= " ORDER BY {$filter_order} {$filter_order_Dir}";
-        $db->setQuery($query, $limitstart, $limit);
+        $db->setQuery($queryStart . $query . $queryEnd, $limitstart, $limit);
         $rows = $db->loadObjectList();
+
+        // Row counter (also needed for an empty page beyond the last one)
+        $this->getTotal = 0;
+        if (count($rows) || $limitstart > 0) {
+            $db->setQuery("/* Backend / K2 / Comments Count */ SELECT COUNT(*)" . $query);
+            $this->getTotal = (int)$db->loadResult();
+        }
+
         return $rows;
     }
 
-    function getTotal()
+    public function getTotal()
     {
-        $app = Factory::getApplication();
-        $params = ComponentHelper::getParams('com_k2');
-        $option = Factory::getApplication()->input->getCmd('option');
-        $view = Factory::getApplication()->input->getCmd('view');
-        $db = Factory::getDbo();
-        $limit = $app->getUserStateFromRequest('global.list.limit', 'limit', $app->getCfg('list_limit'), 'int');
-        $limitstart = $app->getUserStateFromRequest($option . '.limitstart', 'limitstart', 0, 'int');
-        $filter_state = $app->getUserStateFromRequest($option . $view . 'filter_state', 'filter_state', 1, 'int');
-        $filter_category = $app->getUserStateFromRequest($option . $view . 'filter_category', 'filter_category', 0, 'int');
-        $filter_author = $app->getUserStateFromRequest($option . $view . 'filter_author', 'filter_author', 0, 'int');
-        $search = $app->getUserStateFromRequest($option . $view . 'search', 'search', '', 'string');
-        $search = StringHelper::strtolower($search);
-        $search = trim(preg_replace('/[^\p{L}\p{N}\s\"\.\@\-_]/u', '', $search));
-
-        $query = "SELECT COUNT(*) FROM #__k2_comments AS c LEFT JOIN #__k2_items AS i ON c.itemID=i.id LEFT JOIN #__k2_users AS u ON c.userID=u.userID WHERE c.id>0";
-
-        if ($filter_state > -1) {
-            $query .= " AND c.published={$filter_state}";
-        }
-
-        if ($filter_category) {
-            $query .= " AND i.catid={$filter_category}";
-        }
-
-        if ($filter_author) {
-            $query .= " AND i.created_by={$filter_author}";
-        }
-
-        if ($search) {
-
-            // Detect exact search phrase using double quotes in search string
-            if (substr($search, 0, 1) == '"' && substr($search, -1) == '"') {
-                $exact = true;
-            } else {
-                $exact = false;
-            }
-
-            // Now completely strip double quotes
-            $search = trim(str_replace('"', '', $search));
-
-            // Escape remaining string
-            $escaped = $db->escape($search, true);
-
-            // Full phrase or set of words
-            if (strpos($escaped, ' ') !== false && !$exact) {
-                $escaped = explode(' ', $escaped);
-                $quoted = array();
-                foreach ($escaped as $key => $escapedWord) {
-                    $quoted[] = $db->Quote('%' . $escapedWord . '%', false);
-                }
-                if ($params->get('adminSearch') == 'full') {
-                    foreach ($quoted as $quotedWord) {
-                        $query .= " AND ( " .
-                            "LOWER(c.commentText) LIKE " . $quotedWord . " " .
-                            "OR LOWER(c.userName) LIKE " . $quotedWord . " " .
-                            "OR LOWER(c.commentEmail) LIKE " . $quotedWord . " " .
-                            "OR LOWER(c.commentURL) LIKE " . $quotedWord . " " .
-                            "OR LOWER(i.title) LIKE " . $quotedWord . " " .
-                            "OR LOWER(u.userName) LIKE " . $quotedWord . " " .
-                            "OR LOWER(u.ip) LIKE " . $quotedWord . " " .
-                            " )";
-                    }
-                } else {
-                    foreach ($quoted as $quotedWord) {
-                        $query .= " AND LOWER(c.commentText) LIKE " . $quotedWord;
-                    }
-                }
-            } // Single word or exact phrase to search for (wrapped in double quotes in the search block)
-            else {
-                $quoted = $db->Quote('%' . $escaped . '%', false);
-
-                if ($params->get('adminSearch') == 'full') {
-                    $query .= " AND ( " .
-                        "LOWER(c.commentText) LIKE " . $quoted . " " .
-                        "OR LOWER(c.userName) LIKE " . $quoted . " " .
-                        "OR LOWER(c.commentEmail) LIKE " . $quoted . " " .
-                        "OR LOWER(c.commentURL) LIKE " . $quoted . " " .
-                        "OR LOWER(i.title) LIKE " . $quoted . " " .
-                        "OR LOWER(u.userName) LIKE " . $quoted . " " .
-                        "OR LOWER(u.ip) LIKE " . $quoted . " " .
-                        " )";
-                } else {
-                    $query .= " AND LOWER(c.commentText) LIKE " . $quoted;
-                }
-            }
-        }
-        $db->setQuery($query);
-        $total = $db->loadresult();
-        return $total;
+        return $this->getTotal;
     }
 
     function publish()

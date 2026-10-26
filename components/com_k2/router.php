@@ -76,6 +76,8 @@ class K2Router extends RouterBase
         $mTask = (empty($menuItem->query['task'])) ? null : $menuItem->query['task'];
         $mId = (empty($menuItem->query['id'])) ? null : $menuItem->query['id'];
         $mTag = (empty($menuItem->query['tag'])) ? null : $menuItem->query['tag'];
+        $mTagNormalized = is_null($mTag) ? null : trim(str_replace('+', ' ', urldecode($mTag)));
+        $qTagNormalized = isset($query['tag']) ? trim(str_replace('+', ' ', urldecode($query['tag']))) : null;
 
 	    if ($menuItem && isset($query['view']) && $menuItem->query['view'] === @$query['view']) {
 		    $unsetView = true;
@@ -100,19 +102,30 @@ class K2Router extends RouterBase
             unset($query['layout']);
         }
 
-        if ($mView == @$query['view'] && $mTask == @$query['task'] && $mId == @(int)$query['id'] && @(int)$query['id'] > 0) {
+        if (
+            !isset($query['tag']) &&
+            $mView == @$query['view'] &&
+            ($mTask == @$query['task'] || (empty($mTask) && in_array(@$query['task'], ['category', 'user']))) &&
+            (int) $mId == @(int) $query['id'] &&
+            ((int) $mId > 0 || (empty($mId) && empty($query['id'])))
+        ) {
             unset($query['view']);
             unset($query['task']);
             unset($query['id']);
         }
 
-        if ($mView == @$query['view'] && $mTask == @$query['task'] && $mTag == @$query['tag'] && isset($query['tag'])) {
+        if (
+            $mView == @$query['view'] &&
+            ($mTask == @$query['task'] || (empty($mTask) && @$query['task'] == 'tag')) &&
+            $mTagNormalized == $qTagNormalized &&
+            isset($query['tag'])
+        ) {
             unset($query['view']);
             unset($query['task']);
             unset($query['tag']);
         }
 
-	    if (isset($query['tag']) && $query['task'] == 'tag' && @intval($query['id']) > 0) {
+	    if (isset($query['tag']) && @$query['task'] == 'tag' && @intval($query['id']) > 0) {
 		    unset($query['id']);
 	    }
 
@@ -137,7 +150,7 @@ class K2Router extends RouterBase
         }
 
         if (isset($query['tag'])) {
-            $segments[] = $query['tag'];
+            $segments[] = urlencode($query['tag']);
             unset($query['tag']);
         }
 
@@ -349,8 +362,9 @@ class K2Router extends RouterBase
             }
             // Category path, without a prefix
             elseif (
-                isset($this->getCategoryProps($segments[0])->alias) &&
-                $segments[0] == $this->getCategoryProps($segments[0])->alias &&
+                ($firstSegmentCategoryProps = $this->getCategoryProps($segments[0])) &&
+                is_object($firstSegmentCategoryProps) &&
+                $segments[0] == $firstSegmentCategoryProps->alias &&
                 !isset($segments[1]) &&
                 (
                     array_reverse($segments)[0] != @$this->getItemProps(array_reverse($segments)[0])->alias ||
@@ -378,8 +392,11 @@ class K2Router extends RouterBase
                 // Reinsert item id to the item alias
                 if (!$params->get('k2SefInsertItemId') && @$segments[1] != 'download' && @$segments[1] != 'edit') {
                     $alias = str_replace(':', '-', array_reverse($segments)[0]);
-                    $id = $this->getItemProps($alias)->id;
-                    $segments[1] = $id.':'.$alias;
+                    $itemProps = $this->getItemProps($alias);
+                    $id = (is_object($itemProps) && !empty($itemProps->id)) ? $itemProps->id : null;
+                    if ($id) {
+                        $segments[1] = $id.':'.$alias;
+                    }
                 }
             }
         }
@@ -488,6 +505,8 @@ class K2Router extends RouterBase
         $mTask = (empty($menuItem->query['task'])) ? null : $menuItem->query['task'];
         $mId = (empty($menuItem->query['id'])) ? null : $menuItem->query['id'];
         $mTag = (empty($menuItem->query['tag'])) ? null : $menuItem->query['tag'];
+        $mTagNormalized = is_null($mTag) ? null : trim(str_replace('+', ' ', urldecode($mTag)));
+        $qTagNormalized = isset($query['tag']) ? trim(str_replace('+', ' ', urldecode($query['tag']))) : null;
 
 	    if ($menuItem && isset($query['view']) && $menuItem->query['view'] === @$query['view']) {
 		    $unsetView = true;
@@ -512,19 +531,30 @@ class K2Router extends RouterBase
             unset($query['layout']);
         }
 
-        if ($mView == @$query['view'] && $mTask == @$query['task'] && $mId == @intval($query['id']) && @intval($query['id']) > 0) {
+        if (
+            !isset($query['tag']) &&
+            $mView == @$query['view'] &&
+            ($mTask == @$query['task'] || (empty($mTask) && in_array(@$query['task'], ['category', 'user']))) &&
+            (int) $mId == @(int) $query['id'] &&
+            ((int) $mId > 0 || (empty($mId) && empty($query['id'])))
+        ) {
             unset($query['view']);
             unset($query['task']);
             unset($query['id']);
         }
 
-        if ($mView == @$query['view'] && $mTask == @$query['task'] && $mTag == @$query['tag'] && isset($query['tag'])) {
+        if (
+            $mView == @$query['view'] &&
+            ($mTask == @$query['task'] || (empty($mTask) && @$query['task'] == 'tag')) &&
+            $mTagNormalized == $qTagNormalized &&
+            isset($query['tag'])
+        ) {
             unset($query['view']);
             unset($query['task']);
             unset($query['tag']);
         }
 
-	    if (isset($query['tag']) && $query['task'] == 'tag' && @intval($query['id']) > 0) {
+	    if (isset($query['tag']) && @$query['task'] == 'tag' && @intval($query['id']) > 0) {
 		    unset($query['id']);
 	    }
 
@@ -554,7 +584,7 @@ class K2Router extends RouterBase
 
         if (isset($query['tag'])) {
             $tag = $query['tag'];
-            $segments[] = $tag;
+            $segments[] = urlencode($tag);
             unset($query['tag']);
         }
 

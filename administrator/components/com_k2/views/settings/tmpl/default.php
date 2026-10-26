@@ -28,7 +28,7 @@ use Joomla\CMS\Language\Text;
             </button>
         </div>
         <div class="configuration">
-            <?php echo Text::_('K2_SETTINGS') ?>
+            <?php echo Text::_('K2_SETTINGS'); ?>
         </div>
         <div class="clr"></div>
     </fieldset>

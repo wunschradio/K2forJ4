@@ -20,6 +20,7 @@ use Joomla\CMS\Language\LanguageHelper;
 use Joomla\CMS\HTML\HTMLHelper;
 use Joomla\CMS\Pagination\Pagination;
 use Joomla\CMS\Plugin\PluginHelper;
+use Joomla\CMS\Session\Session;
 use Joomla\CMS\Table\Table;
 use Joomla\CMS\Toolbar\Toolbar;
 
@@ -51,7 +52,7 @@ class K2ViewItems extends K2View
         $filter_state = $app->getUserStateFromRequest($option . $view . 'filter_state', 'filter_state', -1, 'int');
         $search = $app->getUserStateFromRequest($option . $view . 'search', 'search', '', 'string');
         $search = StringHelper::strtolower($search);
-        $search = trim(preg_replace('/[^\p{L}\p{N}\s\"\-_]/u', '', $search));
+        $search = StringHelper::trim(preg_replace('/[^\p{L}\p{N}\s\-.,:!?\'"()]/u', '', $search));
         $tag = $app->getUserStateFromRequest($option . $view . 'tag', 'tag', 0, 'int');
         $language = $app->getUserStateFromRequest($option . $view . 'language', 'language', '', 'string');
 
@@ -217,8 +218,7 @@ class K2ViewItems extends K2View
         $this->lists = $lists;
 
         // Pagination
-        jimport('joomla.html.pagination');
-        $pageNav = new Pagination($total, $limitstart, $limit);
+        $pageNav = new K2Pagination($total, $limitstart, $limit);
         $this->page = $pageNav;
 
         // Augment with plugin events
@@ -318,7 +318,7 @@ class K2ViewItems extends K2View
             if ($user->authorise('core.admin', 'com_k2') || $user->authorise('core.options', 'com_k2')) {
                 $toolbar->preferences('com_k2', 'K2_SETTINGS');
                 if ($user->gid > 23 && !$this->params->get('hideImportButton')) {
-                    $buttonUrl = URI::base() . 'index.php?option=com_k2&amp;view=items&amp;task=import';
+                    $buttonUrl = URI::base() . 'index.php?option=com_k2&amp;view=items&amp;task=import&amp;' . Session::getFormToken() . '=1';
                     $buttonText = Text::_('K2_IMPORT_JOOMLA_CONTENT');
                     $button = '<joomla-toolbar-button id="toolbar-import-content"><a id="K2ImportContentButton" class="btn btn-small" href="' . $buttonUrl . '"><i class="icon-archive"></i>' . $buttonText . '</a></joomla-toolbar-button>';
                     $toolbar->customButton('Import')->html($button);
@@ -341,7 +341,7 @@ class K2ViewItems extends K2View
                 ToolBarHelper::preferences('com_k2', '(window.innerHeight) * 0.9', '(window.innerWidth) * 0.7', 'K2_SETTINGS');
                 // Display import button for Joomla content
                 if ($user->gid > 23 && !$this->params->get('hideImportButton')) {
-                    $buttonUrl = URI::base() . 'index.php?option=com_k2&amp;view=items&amp;task=import';
+                    $buttonUrl = URI::base() . 'index.php?option=com_k2&amp;view=items&amp;task=import&amp;' . Session::getFormToken() . '=1';
                     $buttonText = Text::_('K2_IMPORT_JOOMLA_CONTENT');
                     $button = '<a id="K2ImportContentButton" class="btn btn-small" href="' . $buttonUrl . '"><i class="icon-archive"></i>' . $buttonText . '</a>';
                     $toolbar->appendButton('Custom', $button);

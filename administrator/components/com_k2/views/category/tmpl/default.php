@@ -141,16 +141,24 @@ use Joomla\CMS\Uri\Uri;
                                    id="k2ImageBrowseServer"/>
                         </div>
                     </div>
-                    <?php if (!empty($this->row->image)): ?>
+                    <?php if (!empty($this->row->image)):
+                        // Cache-busting timestamp for replaced images
+                        $catImageTimestamp = '';
+                        $catImageFile = JPATH_SITE . '/media/k2/categories/' . $this->row->image;
+                        if (file_exists($catImageFile) && filemtime($catImageFile)) {
+                            $catImageTimestamp = '?t=' . date("Ymd_Hi", filemtime($catImageFile));
+                        }
+                        $categoryImage = URI::root(true) . '/media/k2/categories/' . $this->row->image . $catImageTimestamp;
+                        ?>
                         <div class="itemAdditionalField">
                             <div class="itemAdditionalValue">
                                 <label><?php echo Text::_('K2_ITEM_IMAGE_PREVIEW'); ?></label>
                             </div>
                             <div class="itemAdditionalData">
                                 <a data-fancybox="images" data-caption="<?php echo $this->row->name; ?>"
-                                   href="<?php echo URI::root(true); ?>/media/k2/categories/<?php echo $this->row->image; ?>"
+                                   href="<?php echo $categoryImage; ?>"
                                    title="<?php echo Text::_('K2_CLICK_ON_IMAGE_TO_PREVIEW_IN_ORIGINAL_SIZE'); ?>">
-                                    <img src="<?php echo URI::root(true); ?>/media/k2/categories/<?php echo $this->row->image; ?>"
+                                    <img src="<?php echo $categoryImage; ?>"
                                          alt="<?php echo $this->row->name; ?>" class="k2AdminImage"/>
                                 </a>
                                 <br/>
@@ -169,7 +177,7 @@ use Joomla\CMS\Uri\Uri;
                 <div class="itemPlugins">
                     <?php foreach ($this->K2Plugins as $K2Plugin): ?>
                         <?php if (!is_null($K2Plugin)): ?>
-                            <fieldset class="adminform">
+                            <fieldset class="adminform k2Plugin-<?php echo preg_replace('/[^\p{L}\p{N}_]/u', '', ucwords(strtolower($K2Plugin->name))); ?>">
                                 <legend><?php echo $K2Plugin->name; ?></legend>
                                 <?php echo $K2Plugin->fields; ?>
                             </fieldset>

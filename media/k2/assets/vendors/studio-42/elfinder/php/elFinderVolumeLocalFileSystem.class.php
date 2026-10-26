@@ -385,7 +385,7 @@ class elFinderVolumeLocalFileSystem extends elFinderVolumeDriver
             }
             $path = $dir . DIRECTORY_SEPARATOR . $name;
         }
-        return $path; 
+        return $path;
     }
 
     /**
@@ -1176,7 +1176,7 @@ class elFinderVolumeLocalFileSystem extends elFinderVolumeDriver
             // insurance unexpected shutdown
             register_shutdown_function(array($this, 'rmdirRecursive'), realpath($dir));
 
-            chmod($dir, 0777);
+            chmod($dir, 0755);
 
             // copy in quarantine
             if (!is_readable($path) || ($archive && !copy($path, $archive))) {
@@ -1480,4 +1480,4 @@ class elFinderVolumeLocalFileSystem extends elFinderVolumeDriver
         }
         return $res;
     }
-} // END class 
+} // END class

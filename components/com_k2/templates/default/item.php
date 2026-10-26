@@ -649,7 +649,7 @@ use Joomla\CMS\Factory;
                 </span>
 
                             <?php if ($comment->userImage): ?>
-                                <img src="<?php echo $comment->userImage; ?>"
+                                <img src="<?php echo htmlspecialchars($comment->userImage, ENT_QUOTES, 'UTF-8'); ?>"
                                      alt="<?php echo OutputFilter::cleanText($comment->userName); ?>"
                                      width="<?php echo $this->item->params->get('commenterImgWidth'); ?>"/>
                             <?php endif; ?>
@@ -660,10 +660,10 @@ use Joomla\CMS\Factory;
                     <?php echo Text::_('K2_POSTED_BY'); ?>
                                 <?php if (!empty($comment->userLink)): ?>
                                     <a href="<?php echo OutputFilter::cleanText($comment->userLink); ?>"
-                                       title="<?php echo OutputFilter::cleanText($comment->userName); ?>"
-                                       target="_blank" rel="nofollow"><?php echo $comment->userName; ?></a>
+                                       title="<?php echo htmlspecialchars($comment->userName, ENT_QUOTES, 'UTF-8'); ?>"
+                                       target="_blank" rel="nofollow"><?php echo htmlspecialchars($comment->userName, ENT_QUOTES, 'UTF-8'); ?></a>
                                 <?php else: ?>
-                                    <?php echo $comment->userName; ?>
+                                    <?php echo htmlspecialchars($comment->userName, ENT_QUOTES, 'UTF-8'); ?>
                                 <?php endif; ?>
                 </span>
 
@@ -677,16 +677,16 @@ use Joomla\CMS\Factory;
                     <?php if ($this->inlineCommentsModeration): ?>
                         <?php if (!$comment->published): ?>
                             <a class="commentApproveLink"
-                               href="<?php echo Route::_('index.php?option=com_k2&view=comments&task=publish&commentID=' . $comment->id . '&format=raw') ?>"><?php echo Text::_('K2_APPROVE') ?></a>
+                               href="<?php echo Route::_('index.php?option=com_k2&view=comments&task=publish&commentID=' . $comment->id . '&format=raw'); ?>"><?php echo Text::_('K2_APPROVE'); ?></a>
                         <?php endif; ?>
 
                     <a class="commentRemoveLink"
-                       href="<?php echo Route::_('index.php?option=com_k2&view=comments&task=remove&commentID=' . $comment->id . '&format=raw') ?>"><?php echo Text::_('K2_REMOVE') ?></a>
+                       href="<?php echo Route::_('index.php?option=com_k2&view=comments&task=remove&commentID=' . $comment->id . '&format=raw'); ?>"><?php echo Text::_('K2_REMOVE'); ?></a>
                     <?php endif; ?>
 
                                     <?php if ($comment->published && ($this->params->get('commentsReporting') == '1' || ($this->params->get('commentsReporting') == '2' && !$this->user->guest))): ?>
                                         <a data-k2-modal="iframe"
-                                           href="<?php echo Route::_('index.php?option=com_k2&view=comments&task=report&commentID=' . $comment->id) ?>"><?php echo Text::_('K2_REPORT') ?></a>
+                                           href="<?php echo Route::_('index.php?option=com_k2&view=comments&task=report&commentID=' . $comment->id); ?>"><?php echo Text::_('K2_REPORT'); ?></a>
                                     <?php endif; ?>
 
                                     <?php if ($comment->reportUserLink): ?>

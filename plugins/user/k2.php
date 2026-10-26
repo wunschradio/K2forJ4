@@ -64,61 +64,80 @@ class plgUserK2 extends CMSPlugin
         if ($app->isClient('site') && $task != 'activate' && Factory::getApplication()->input->getInt('K2UserForm')) {
             CMSPlugin::loadLanguage('com_k2');
             Table::addIncludePath(JPATH_ADMINISTRATOR . '/components/com_k2/tables');
-            $row = Table::getInstance('K2User', 'Table');
             $k2id = $this->getK2UserID($user['id']);
+            $row = Table::getInstance('K2User', 'Table');
+            if ($k2id) {
+                $row->load($k2id);
+            }
+            // Snapshot server-owned columns from the loaded row BEFORE bind(), so a crafted
+            // POST cannot overwrite them. 'image' is only ever set by the upload handler /
+            // del_image below; 'notes' is a K2 backend-only annotation (e.g. spammer flag).
+            // 'plugins' stays bindable, it carries the K2 user plugin fields.
+            $origImage = $row->image;
+            $origNotes = $row->notes;
 
             $row->bind(Factory::getApplication()->input->getArray($_POST));
+            // Override columns that must never come from POST
             $row->set('id', $k2id);
             $row->set('userID', $user['id']);
             $row->set('userName', $user['name']);
-            $row->set('ip', $_SERVER['REMOTE_ADDR']);
-            $row->set('hostname', gethostbyaddr($_SERVER['REMOTE_ADDR']));
-            $row->set('notes', Factory::getApplication()->input->post->get('notes', ''));
+            $row->set('ip', isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '');
+            $row->set('hostname', isset($_SERVER['REMOTE_ADDR']) ? gethostbyaddr($_SERVER['REMOTE_ADDR']) : '');
+            $row->set('image', $origImage);
+            $row->set('notes', isset($user['notes']) ? $user['notes'] : $origNotes);
             if ($isnew) {
                 $row->set('group', $params->get('K2UserGroup', 1));
             } else {
                 $row->set('group', null);
                 $row->set('gender', Factory::getApplication()->input->getVar('gender', 'n'));
-                $row->set('url', Factory::getApplication()->input->getString('url'));
+                $url = Factory::getApplication()->input->getString('url');
+                $url = StringHelper::str_ireplace(' ', '', $url);
+                $url = StringHelper::str_ireplace('"', '', $url);
+                $url = StringHelper::str_ireplace('<', '', $url);
+                $url = StringHelper::str_ireplace('>', '', $url);
+                $url = StringHelper::str_ireplace('\'', '', $url);
+                $row->set('url', $url);
             }
-            /*
-            if ($row->gender != 'm' && $row->gender != 'f') {
-                $row->gender = 'n';
-            }
-            */
-            $row->url = StringHelper::str_ireplace(' ', '', $row->url);
-            $row->url = StringHelper::str_ireplace('"', '', $row->url);
-            $row->url = StringHelper::str_ireplace('<', '', $row->url);
-            $row->url = StringHelper::str_ireplace('>', '', $row->url);
-            $row->url = StringHelper::str_ireplace('\'', '', $row->url);
             $row->set('description', Factory::getApplication()->input->post->getString('description', ''));
             if ($params->get('xssFiltering')) {
-                $filter = new InputFilter(array(), array(), 1, 1, 0);
+                $filter = new InputFilter([], [], 1, 1, 0);
                 $row->description = $filter->clean($row->description);
             }
             $row->store();
 
             $file = Factory::getApplication()->input->files->getArray($_FILES);
 
-            require_once(JPATH_SITE . '/media/k2/assets/vendors/verot/class.upload.php/src/class.upload.php');
-            $savepath = JPATH_ROOT . '/media/k2/users/';
-
             if (isset($file['image']) && $file['image']['error'] == 0 && !Factory::getApplication()->input->getBool('del_image')) {
-                $handle = new Upload($file['image']);
-                $handle->allowed = array('image/*');
-                if ($handle->uploaded) {
-                    $handle->file_auto_rename = false;
-                    $handle->file_overwrite = true;
-                    $handle->file_new_name_body = $row->id;
-                    $handle->image_resize = true;
-                    $handle->image_ratio_y = true;
-                    $handle->image_x = $params->get('userImageWidth', '100');
-                    $handle->Process($savepath);
-                    $handle->Clean();
-                } else {
-                    $app->enqueueMessage(Text::_('K2_COULD_NOT_UPLOAD_YOUR_IMAGE') . $handle->error, 'notice');
+                require_once JPATH_SITE . '/media/k2/assets/vendors/verot/class.upload.php/src/class.upload.php';
+                $savepath = JPATH_ROOT . '/media/k2/users/';
+
+                try {
+                    $handle = new \Verot\Upload\Upload($file['image']);
+                    $handle->allowed = ['image/*'];
+                    $handle->forbidden = ['image/bmp', 'image/tiff'];
+
+                    if ($handle->uploaded) {
+                        $handle->file_auto_rename = false;
+                        $handle->file_new_name_body = $row->id;
+                        $handle->file_overwrite = true;
+                        $handle->image_convert = 'webp';
+                        $handle->image_ratio_y = true;
+                        $handle->image_resize = true;
+                        $handle->image_x = $params->get('userImageWidth', '100');
+                        $handle->webp_quality = $params->get('imagesQuality', '90');
+
+                        $handle->process($savepath);
+
+                        if ($handle->processed) {
+                            $handle->clean();
+                            $image = $handle->file_dst_name;
+                        } else {
+                            throw new \RuntimeException($handle->error);
+                        }
+                    }
+                } catch (\Exception $e) {
+                    $app->enqueueMessage(Text::_('K2_COULD_NOT_UPLOAD_YOUR_IMAGE') . $e->getMessage(), 'error');
                 }
-                $image = $handle->file_dst_name;
             }
 
             if (Factory::getApplication()->input->getBool('del_image')) {
@@ -166,8 +185,8 @@ class plgUserK2 extends CMSPlugin
                     $row->set('userName', $user['fullname']);
                     $row->set('group', $params->get('K2UserGroup', 1));
                 }
-                $row->ip = $_SERVER['REMOTE_ADDR'];
-                $row->hostname = gethostbyaddr($_SERVER['REMOTE_ADDR']);
+                $row->ip = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '';
+                $row->hostname = isset($_SERVER['REMOTE_ADDR']) ? gethostbyaddr($_SERVER['REMOTE_ADDR']) : '';
                 $row->store();
             }
 
@@ -225,7 +244,7 @@ class plgUserK2 extends CMSPlugin
     public function checkSpammer(&$user)
     {
         if (!$user['block']) {
-            $ip = $_SERVER['REMOTE_ADDR'];
+            $ip = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '127.0.0.1';
             $email = urlencode($user['email']);
             $username = urlencode($user['username']);
             $ch = curl_init();

@@ -24,16 +24,16 @@ class TableK2Tag extends K2Table
 	public $description = '';
 	public $published = null;
 
-    function __construct(&$db)
+    function __construct($db)
     {
         parent::__construct('#__k2_tags', 'id', $db);
     }
 
     function check()
     {
-        $this->name = StringHelper::trim($this->name);
-        $this->name = StringHelper::str_ireplace('-', '', $this->name);
-        $this->name = StringHelper::str_ireplace('.', '', $this->name);
+        // Keep letters, numbers, spaces and hyphens only
+        $this->name = StringHelper::trim(preg_replace('/[^\p{L}\p{N} \-]/u', '', (string)$this->name));
+        $this->name = preg_replace('/\s+/', ' ', $this->name);
 
         $params = ComponentHelper::getParams('com_k2');
         if ($params->get('k2TagNorm')) {
@@ -70,12 +70,13 @@ class TableK2Tag extends K2Table
         }
 
         $this->name = StringHelper::trim($this->name);
+
         if ($this->name == '') {
             $this->setError(Text::_('K2_TAG_CANNOT_BE_EMPTY'));
             return false;
         }
 
-        if (strlen(utf8_decode($this->name)) < 2) {
+        if (StringHelper::strlen($this->name) < 2) {
             $this->setError(Text::_('K2_TAG_CANNOT_BE_A_SINGLE_CHARACTER'));
             return false;
         }

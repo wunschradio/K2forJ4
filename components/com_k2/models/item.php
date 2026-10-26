@@ -116,6 +116,7 @@ class K2ModelItem extends K2Model
         }
 
         // Image
+        $item->imageGeneric = '';
         $item->imageXSmall = '';
         $item->imageSmall = '';
         $item->imageMedium = '';
@@ -125,8 +126,7 @@ class K2ModelItem extends K2Model
         $imageTimestamp = '';
         $dateModified = ((int)$item->modified) ? $item->modified : '';
         if ($params->get('imageTimestamp', 1) && $dateModified) {
-	        $dateTimeObj = new DateTime($dateModified);
-	        $imageTimestamp = '?t=' . IntlDateFormatter::formatObject($dateTimeObj,'YMMdd_hhmmss');
+            $imageTimestamp = '?t=' . date('Ymd_His', strtotime($dateModified));
         }
 
         $imageFilenamePrefix = md5("Image" . $item->id);
@@ -205,8 +205,9 @@ class K2ModelItem extends K2Model
         }
 
         $item->rawTitle = $item->title;
-        $item->title = htmlspecialchars($item->title, ENT_QUOTES);
-        $item->image_caption = htmlspecialchars($item->image_caption, ENT_QUOTES);
+        $item->title = str_ireplace('&nbsp;', ' ', (string) $item->title);
+        $item->title = htmlspecialchars($item->title, ENT_QUOTES, 'UTF-8');
+        $item->image_caption = htmlspecialchars((string) $item->image_caption, ENT_QUOTES, 'UTF-8');
 
         // Author
         if (!empty($item->created_by_alias)) {
@@ -239,7 +240,7 @@ class K2ModelItem extends K2Model
         return $item;
     }
 
-    public function prepareFeedItem(&$item)
+    public function prepareFeedItem($item)
     {
         Table::addIncludePath(JPATH_COMPONENT_ADMINISTRATOR . '/tables');
         $params = K2HelperUtilities::getParams('com_k2');
@@ -411,6 +412,13 @@ class K2ModelItem extends K2Model
             $item->author->profile = $this->getUserProfile($item->created_by);
         }
 
+        // Plugin event to override everything
+        Factory::getApplication()->triggerEvent('onK2ItemRender', array(
+            &$item,
+            &$params,
+            $limitstart
+        ));
+
         return $item;
     }
 
@@ -418,7 +426,7 @@ class K2ModelItem extends K2Model
     {
         $row = new stdClass;
         $row->id = $item->id;
-        $row->title = $item->title;
+        $row->title = str_ireplace('&nbsp;', ' ', $item->title);
         $row->alias = $item->alias;
         $row->link = $item->link;
         $row->catid = $item->catid;
@@ -463,15 +471,13 @@ class K2ModelItem extends K2Model
         $row->numOfvotes = isset($item->numOfvotes) ? $item->numOfvotes : '';
         if (isset($item->author)) {
             $row->author = new stdClass;
-            //$row->author->id = $item->author->id;
             $row->author->name = $item->author->name;
-            //$row->author->username = $item->author->username;
-            $row->author->link = $item->author->link;
-            $row->author->avatar = $item->author->avatar;
+            $row->author->link = (!empty($item->author->link)) ? $item->author->link : '';
+            $row->author->avatar = (!empty($item->author->avatar)) ? $item->author->avatar : '';
             if (isset($item->author->profile)) {
                 unset($item->author->profile->plugins);
             }
-            $row->author->profile = $item->author->profile;
+            $row->author->profile = (!empty($item->author->profile)) ? $item->author->profile : '';
             if (isset($row->author->profile->url)) {
                 $row->author->profile->url = htmlspecialchars($row->author->profile->url, ENT_QUOTES, 'UTF-8');
             }
@@ -792,6 +798,14 @@ class K2ModelItem extends K2Model
                 }
             }
         }
+
+        // Plugin event to override everything
+        Factory::getApplication()->triggerEvent('onK2ItemRender', array(
+            &$item,
+            &$params,
+            $limitstart
+        ));
+
         return $item;
     }
 
@@ -832,7 +846,7 @@ class K2ModelItem extends K2Model
 
         if ($rate >= 1 && $rate <= 5) {
             $db = Factory::getDbo();
-            $userIP = $_SERVER['REMOTE_ADDR'];
+            $userIP = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '0.0.0.0';
             $query = "SELECT * FROM #__k2_rating WHERE itemID =" . (int)$item->id;
             $db->setQuery($query);
             $rating = $db->loadObject();
@@ -978,6 +992,9 @@ class K2ModelItem extends K2Model
                 $app->close();
             }
 
+            // Security: always force an INSERT - never allow a POST to overwrite an existing comment
+            $row->id = null;
+
             $row->commentText = Factory::getApplication()->input->getString('commentText', '', 'default');
             $row->commentText = strip_tags($row->commentText);
 
@@ -999,10 +1016,13 @@ class K2ModelItem extends K2Model
             $datenow = Factory::getDate();
             $row->commentDate = $datenow->toSql();
 
+            // Security: always set userID from the server-side session, never from POST data
             if (!$user->guest) {
                 $row->userID = $user->id;
                 $row->commentEmail = $user->email;
                 $row->userName = $user->name;
+            } else {
+                $row->userID = 0;
             }
 
             $userName = trim($row->userName);
@@ -1172,8 +1192,8 @@ class K2ModelItem extends K2Model
         foreach ($jsonObjects as $object) {
             $extraFieldsIDs[] = $object->id;
         }
-        ArrayHelper::toInteger($extraFieldsIDs);
-        $condition = @implode(',', $extraFieldsIDs);
+        $extraFieldsIDs = ArrayHelper::toInteger($extraFieldsIDs);
+        $condition = (is_array($extraFieldsIDs) && count($extraFieldsIDs)) ? implode(',', $extraFieldsIDs) : '0';
 
         $query = "SELECT extraFieldsGroup FROM #__k2_categories WHERE id=" . (int)$item->catid;
         $db->setQuery($query);
@@ -1232,11 +1252,11 @@ class K2ModelItem extends K2Model
                         }
                     } elseif ($rows[$i]->type == 'multipleSelect') {
                         foreach (json_decode($rows[$i]->value) as $option) {
-                            if (@in_array($option->value, $object->value)) {
+                            if (in_array($option->value, (array) $object->value)) {
                                 $values[] = $option->name;
                             }
                         }
-                        $value = @implode(', ', $values);
+                        $value = (is_array($values) && count($values)) ? implode(', ', $values) : '';
                     } elseif ($rows[$i]->type == 'csv') {
                         $array = $object->value;
                         if (isset($array) && count($array)) {
@@ -1345,7 +1365,7 @@ class K2ModelItem extends K2Model
         return $K2ItemExtraFieldsInstances[$item->id];
     }
 
-    public function buildAliasBasedExtraFields($extraFields, &$item)
+    public function buildAliasBasedExtraFields($extraFields, $item)
     {
         if (is_null($item)) {
             return false;

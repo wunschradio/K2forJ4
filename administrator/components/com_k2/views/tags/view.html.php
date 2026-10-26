@@ -15,10 +15,11 @@ use Joomla\String\StringHelper;
 use Joomla\CMS\Factory;
 use Joomla\CMS\Component\ComponentHelper;
 use Joomla\CMS\HTML\HTMLHelper;
-use Joomla\CMS\Pagination\Pagination;
 use Joomla\CMS\Language\Text;
 
 jimport('joomla.application.component.view');
+
+JLoader::register('K2Pagination', JPATH_ADMINISTRATOR . '/components/com_k2/lib/k2pagination.php');
 
 class K2ViewTags extends K2View
 {
@@ -42,9 +43,10 @@ class K2ViewTags extends K2View
         $filter_order = $app->getUserStateFromRequest($option . $view . 'filter_order', 'filter_order', 'id', 'cmd');
         $filter_order_Dir = $app->getUserStateFromRequest($option . $view . 'filter_order_Dir', 'filter_order_Dir', 'DESC', 'word');
         $filter_state = $app->getUserStateFromRequest($option . $view . 'filter_state', 'filter_state', -1, 'int');
+
         $search = $app->getUserStateFromRequest($option . $view . 'search', 'search', '', 'string');
         $search = StringHelper::strtolower($search);
-        $search = trim(preg_replace('/[^\p{L}\p{N}\s\-_]/u', '', $search));
+        $search = StringHelper::trim(preg_replace('/[^\p{L}\p{N}\s\-]/u', '', $search));
 
         $model = $this->getModel();
         $total = $model->getTotal();
@@ -60,8 +62,7 @@ class K2ViewTags extends K2View
         }
         $this->rows = $tags;
 
-        jimport('joomla.html.pagination');
-        $pageNav = new Pagination($total, $limitstart, $limit);
+        $pageNav = new K2Pagination($total, $limitstart, $limit);
         $this->page = $pageNav;
 
         $lists = array();

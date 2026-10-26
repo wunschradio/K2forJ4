@@ -50,7 +50,7 @@ if ($userAvatarWidthSelect == 'inherit') {
 if ($user->guest) {
     // OpenID stuff (do not edit)
     if (PluginHelper::isEnabled('authentication', 'openid')) {
-        $lang->load('plg_authentication_openid', JPATH_ADMINISTRATOR);
+        $language->load('plg_authentication_openid', JPATH_ADMINISTRATOR);
         $document = Factory::getDocument();
         $document->addScriptDeclaration("
 			var Language = {};

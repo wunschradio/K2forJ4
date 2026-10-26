@@ -32,7 +32,7 @@ class TableK2Comment extends K2Table
     var $commentURL = '';
     var $published = null;
 
-    function __construct(&$db)
+    function __construct($db)
     {
         parent::__construct('#__k2_comments', 'id', $db);
     }

@@ -24,7 +24,7 @@ class TableK2UserGroup extends K2Table
     var $name = null;
     var $permissions = null;
 
-    function __construct(&$db)
+    function __construct($db)
     {
 
         parent::__construct('#__k2_user_groups', 'id', $db);
@@ -43,7 +43,7 @@ class TableK2UserGroup extends K2Table
     function bind($array, $ignore = '')
     {
 
-        if (key_exists('params', $array) && is_array($array['params'])) {
+        if (array_key_exists('params', $array) && is_array($array['params'])) {
             $registry = new Registry();
             $registry->loadArray($array['params']);
             if (Factory::getApplication()->input->getVar('categories') == 'all' || Factory::getApplication()->input->getVar('categories') == 'none')

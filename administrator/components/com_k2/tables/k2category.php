@@ -42,7 +42,7 @@ class TableK2Category extends K2Table
     public $plugins = '';
     public $language = null;
 
-    public function __construct(&$db)
+    public function __construct($db)
     {
         parent::__construct('#__k2_categories', 'id', $db);
     }
@@ -140,7 +140,8 @@ class TableK2Category extends K2Table
         if ($params->get('k2Sef') && !$params->get('k2SefInsertCatId')) {
             $db = Factory::getDbo();
             $db->setQuery("SELECT id FROM #__k2_categories WHERE alias = " . $db->quote($this->alias) . " AND id != " . (int)$this->id);
-            $result = count($db->loadObjectList());
+            $resultList = $db->loadObjectList();
+            $result = is_array($resultList) ? count($resultList) : 0;
             if ($result > 0) {
                 $this->alias .= '-' . ((int)$result + 1);
                 $app = Factory::getApplication();
@@ -153,12 +154,12 @@ class TableK2Category extends K2Table
 
     public function bind($array, $ignore = '')
     {
-        if (key_exists('params', $array) && is_array($array['params'])) {
+        if (array_key_exists('params', $array) && is_array($array['params'])) {
             $registry = new Registry();
             $registry->loadArray($array['params']);
             $array['params'] = $registry->toString();
         }
-        if (key_exists('plugins', $array) && is_array($array['plugins'])) {
+        if (array_key_exists('plugins', $array) && is_array($array['plugins'])) {
             $registry = new Registry();
             $registry->loadArray($array['plugins']);
             $array['plugins'] = $registry->toString();

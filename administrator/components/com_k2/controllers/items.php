@@ -181,6 +181,7 @@ class K2ControllerItems extends K2Controller
 
     public function import()
     {
+        Session::checkToken('get') or jexit('Invalid Token');
         $model = $this->getModel('items');
         $model->importJ16();
     }

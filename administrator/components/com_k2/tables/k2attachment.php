@@ -24,7 +24,7 @@ class TableK2Attachment extends K2Table
     var $titleAttribute = null;
     var $hits = null;
 
-    function __construct(&$db)
+    function __construct($db)
     {
         parent::__construct('#__k2_attachments', 'id', $db);
     }

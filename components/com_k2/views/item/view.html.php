@@ -13,6 +13,7 @@ defined('_JEXEC') or die;
 use Joomla\CMS\Factory;
 use Joomla\CMS\Router\Route;
 use Joomla\CMS\Uri\Uri;
+use Joomla\CMS\Session\Session;
 use Joomla\CMS\Language\Text;
 use Joomla\Registry\Registry;
 use Joomla\CMS\Plugin\PluginHelper;
@@ -251,7 +252,7 @@ class K2ViewItem extends K2View
                             $comments[$i]->userLink = $comments[$i]->commentURL;
                         }
                         if ($reportSpammerFlag && $comments[$i]->userID > 0) {
-                            $comments[$i]->reportUserLink = Route::_('index.php?option=com_k2&view=comments&task=reportSpammer&id=' . $comments[$i]->userID . '&format=raw');
+                            $comments[$i]->reportUserLink = Route::_('index.php?option=com_k2&view=comments&task=reportSpammer&id=' . $comments[$i]->userID . '&format=raw&' . Session::getFormToken() . '=1');
                         } else {
                             $comments[$i]->reportUserLink = false;
                         }
@@ -266,6 +267,11 @@ class K2ViewItem extends K2View
                     jimport('joomla.html.pagination');
                     $total = $item->numOfComments;
                     $pagination = new Pagination($total, $limitstart, $limit);
+                    $pagination->setAdditionalUrlParam('id', Factory::getApplication()->input->getInt('id'));
+                    if (version_compare(JVERSION, '5.1.3', '>=') || (version_compare(JVERSION, '4.4.7', '>=') && version_compare(JVERSION, '5.0.0', '<'))) {
+                        $pagination->setAdditionalUrlParam('option', 'com_k2');
+                        $pagination->setAdditionalUrlParam('view', 'item');
+                    }
                 }
             }
         }
@@ -316,8 +322,7 @@ class K2ViewItem extends K2View
 				$imageTimestamp = '';
 				$dateModified = ((int)$previousItem->modified) ? $previousItem->modified : '';
 				if ($params->get('imageTimestamp', 1) && $dateModified) {
-					$dateTimeObj = new DateTime($dateModified);
-					$imageTimestamp = '?t=' . IntlDateFormatter::formatObject($dateTimeObj,'YMMdd_hhmmss');
+					$imageTimestamp = '?t=' . date('Ymd_His', strtotime($dateModified));
 				}
 
                 $imageFilenamePrefix = md5("Image" . $previousItem->id);
@@ -358,8 +363,7 @@ class K2ViewItem extends K2View
 				$imageTimestamp = '';
 				$dateModified = ((int)$nextItem->modified) ? $nextItem->modified : '';
 				if ($params->get('imageTimestamp', 1) && $dateModified) {
-					$dateTimeObj = new DateTime($dateModified);
-					$imageTimestamp = '?t=' . IntlDateFormatter::formatObject($dateTimeObj,'YMMdd_hhmmss');
+					$imageTimestamp = '?t=' . date('Ymd_His', strtotime($dateModified));
 				}
 
                 $imageFilenamePrefix = md5("Image" . $nextItem->id);
@@ -463,8 +467,7 @@ class K2ViewItem extends K2View
         Factory::getApplication()->allowCache(true);
 
 		$itemCreatedOrModifiedDate = ((int)$item->modified) ? $item->modified : $item->created;
-		$dateTimeObj = new DateTime($itemCreatedOrModifiedDate);
-		$itemCreatedOrModifiedDate = IntlDateFormatter::formatObject($dateTimeObj,'eee, d MMM y HH:mm:ss'). " GMT";
+		$itemCreatedOrModifiedDate = gmdate('D, d M Y H:i:s', strtotime($itemCreatedOrModifiedDate)) . ' GMT';
 
         // Last-Modified HTTP header
         Factory::getApplication()->setHeader('Last-Modified', $itemCreatedOrModifiedDate);
@@ -521,10 +524,10 @@ class K2ViewItem extends K2View
             $metaDesc = $document->getMetadata('description');
 
             if ($item->metadesc) {
-                $metaDesc = filter_var($item->metadesc, FILTER_UNSAFE_RAW);
+                $metaDesc = strip_tags($item->metadesc);
             } else {
                 $metaDesc = preg_replace("#{(.*?)}(.*?){/(.*?)}#s", '', $itemTextBeforePlugins);
-                $metaDesc = filter_var($metaDesc, FILTER_UNSAFE_RAW);
+                $metaDesc = strip_tags($metaDesc);
             }
 
             if ($params->get('menu-meta_description')) {
@@ -595,7 +598,7 @@ class K2ViewItem extends K2View
             if ($params->get('facebookMetatags', 1)) {
                 $document->setMetaData('og:url', $item->absoluteURL);
                 $document->setMetaData('og:type', 'article');
-                $document->setMetaData('og:title', filter_var($metaTitle, FILTER_UNSAFE_RAW));
+                $document->setMetaData('og:title', strip_tags($metaTitle));
                 $document->setMetaData('og:description', K2HelperUtilities::characterLimit($metaDesc, 300)); // 300 chars limit for Facebook post sharing
                 $facebookImage = 'image' . $params->get('facebookImage', 'Medium');
                 if ($item->$facebookImage) {
@@ -620,7 +623,7 @@ class K2ViewItem extends K2View
                 if ($params->get('twitterUsername')) {
                     $document->setMetaData('twitter:site', '@' . $params->get('twitterUsername'));
                 }
-                $document->setMetaData('twitter:title', filter_var($metaTitle, FILTER_UNSAFE_RAW));
+                $document->setMetaData('twitter:title', strip_tags($metaTitle));
                 $document->setMetaData('twitter:description', K2HelperUtilities::characterLimit($metaDesc, 200)); // 200 chars limit for Twitter post sharing
                 $twitterImage = 'image' . $params->get('twitterImage', 'Medium');
                 if ($item->$twitterImage) {
@@ -634,7 +637,7 @@ class K2ViewItem extends K2View
                     if (File::exists(JPATH_SITE . '/media/k2/items/cache/' . $basenameWithNoTimestamp)) {
                         $image = URI::root() . 'media/k2/items/cache/' . $basename;
                         $document->setMetaData('twitter:image', $image);
-                        $document->setMetaData('twitter:image:alt', (!empty($item->image_caption)) ? filter_var($item->image_caption, FILTER_UNSAFE_RAW) : filter_var($item->title, FILTER_UNSAFE_RAW));
+                        $document->setMetaData('twitter:image:alt', (!empty($item->image_caption)) ? strip_tags($item->image_caption) : strip_tags($item->title));
                         if (!$params->get('facebookMetatags')) {
                             $document->setMetaData('image', $image); // Generic meta (if not already set in Facebook meta tags)
                         }
@@ -656,7 +659,7 @@ class K2ViewItem extends K2View
                 // Prepare content snippets
                 $itemSD_SiteName = $config->get('sitename');
                 $itemSD_SiteName = ($params->get('k2SeoGsdOrgName')) ? $params->get('k2SeoGsdOrgName') : $itemSD_SiteName;
-                $itemSD_SiteLogo = !empty($params->get('k2SeoGsdOrgLogo')) ? URI::root().trim($params->get('k2SeoGsdOrgLogo')) : '';
+                $itemSD_SiteLogo = !empty($params->get('k2SeoGsdOrgLogo')) ? rtrim(Uri::root(), '/') . '/' . ltrim(trim($params->get('k2SeoGsdOrgLogo')), '/') : '';
 
                 $itemSD_Description = str_replace($sdStrSearch, $sdStrReplace, strip_tags($item->introtext, $allowedTags));
                 $itemSD_ArticleBody = str_replace($sdStrSearch, $sdStrReplace, strip_tags($item->text, $allowedTags));
@@ -788,7 +791,7 @@ class K2ViewItem extends K2View
 
     private function filterHTML($str)
     {
-        return htmlspecialchars(trim($str), ENT_QUOTES, 'utf-8');
+        return htmlspecialchars(trim((string) $str), ENT_QUOTES, 'UTF-8');
     }
 
     private function setCanonicalUrl($url)

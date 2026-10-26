@@ -22,7 +22,7 @@ use Joomla\CMS\Uri\Uri;
 
 jimport('joomla.application.component.model');
 
-Table::addIncludePath(JPATH_COMPONENT . '/tables');
+Table::addIncludePath(JPATH_ADMINISTRATOR . '/components/com_k2/tables');
 
 class K2ModelExtraField extends K2Model
 {

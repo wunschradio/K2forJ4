@@ -24,6 +24,8 @@ use Joomla\Registry\Registry;
 
 jimport('joomla.application.component.model');
 
+Table::addIncludePath(JPATH_ADMINISTRATOR . '/components/com_k2/tables');
+
 class K2ModelItems extends K2Model
 {
     private $getTotal;
@@ -45,15 +47,16 @@ class K2ModelItems extends K2Model
         $filter_author = $app->getUserStateFromRequest($option . $view . 'filter_author', 'filter_author', 0, 'int');
         $filter_state = $app->getUserStateFromRequest($option . $view . 'filter_state', 'filter_state', -1, 'int');
         $search = $app->getUserStateFromRequest($option . $view . 'search', 'search', '', 'string');
-        $search = StringHelper::strtolower($search);
-        $search = trim(preg_replace('/[^\p{L}\p{N}\s\"\-_]/u', '', $search));
         $tag = $app->getUserStateFromRequest($option . $view . 'tag', 'tag', 0, 'int');
         $language = $app->getUserStateFromRequest($option . $view . 'language', 'language', '', 'string');
 
-        $query = "/* Backend / K2 / Items */ SELECT SQL_CALC_FOUND_ROWS i.*, g.name AS groupname, c.name AS category, v.name AS author, w.name AS moderator, u.name AS editor
-            FROM #__k2_items AS i
-            LEFT JOIN #__k2_categories AS c ON c.id = i.catid
-            LEFT JOIN #__groups AS g ON g.id = i.access
+        // --- Query containing initial SELECT ---
+        $queryStart = "/* Backend / K2 / Items */ SELECT i.*, g.title AS groupname, c.name AS category, v.name AS author, w.name AS moderator, u.name AS editor";
+
+        // --- Query containing FROM to WHERE ---
+        $query = " FROM #__k2_items AS i FORCE INDEX (idx_items_common_backend)
+            STRAIGHT_JOIN #__k2_categories AS c ON c.id = i.catid
+            LEFT JOIN #__viewlevels AS g ON g.id = i.access
             LEFT JOIN #__users AS u ON u.id = i.checked_out
             LEFT JOIN #__users AS v ON v.id = i.created_by
             LEFT JOIN #__users AS w ON w.id = i.modified_by";
@@ -65,66 +68,25 @@ class K2ModelItems extends K2Model
         $query .= " WHERE i.trash={$filter_trash}";
 
         if ($search) {
-            // Detect exact search phrase using double quotes in search string
-            if (substr($search, 0, 1) == '"' && substr($search, -1) == '"') {
-                $exact = true;
+            if ($params->get('adminSearch') == 'full') {
+                $query .= K2GlobalHelper::search($search, [
+                    'i.title',
+                    'i.alias',
+                    'i.introtext',
+                    'i.`fulltext`',
+                    'i.extra_fields_search',
+                    'i.image_caption',
+                    'i.image_credits',
+                    'i.video_caption',
+                    'i.video_credits',
+                    'i.metadesc',
+                    'i.metakey',
+                ]);
             } else {
-                $exact = false;
-            }
-
-            // Now completely strip double quotes
-            $search = trim(str_replace('"', '', $search));
-
-            // Escape remaining string
-            $escaped = $db->escape($search, true);
-
-            // Full phrase or set of words
-            if (strpos($escaped, ' ') !== false && !$exact) {
-                $escaped = explode(' ', $escaped);
-                $quoted = array();
-                foreach ($escaped as $key => $escapedWord) {
-                    $quoted[] = $db->Quote('%' . $escapedWord . '%', false);
-                }
-                if ($params->get('adminSearch') == 'full') {
-                    foreach ($quoted as $quotedWord) {
-                        $query .= " AND (
-                            LOWER(i.title) LIKE " . $quotedWord . " OR
-                            LOWER(i.introtext) LIKE " . $quotedWord . " OR
-                            LOWER(i.`fulltext`) LIKE " . $quotedWord . " OR
-                            LOWER(i.extra_fields_search) LIKE " . $quotedWord . " OR
-                            LOWER(i.image_caption) LIKE " . $quotedWord . " OR
-                            LOWER(i.image_credits) LIKE " . $quotedWord . " OR
-                            LOWER(i.video_caption) LIKE " . $quotedWord . " OR
-                            LOWER(i.video_credits) LIKE " . $quotedWord . " OR
-                            LOWER(i.metadesc) LIKE " . $quotedWord . " OR
-                            LOWER(i.metakey) LIKE " . $quotedWord . "
-                        )";
-                    }
-                } else {
-                    foreach ($quoted as $quotedWord) {
-                        $query .= " AND LOWER(i.title) LIKE " . $quotedWord;
-                    }
-                }
-            } // Single word or exact phrase to search for (wrapped in double quotes in the search block)
-            else {
-                $quoted = $db->Quote('%' . $escaped . '%', false);
-
-                if ($params->get('adminSearch') == 'full') {
-                    $query .= " AND (
-                        LOWER(i.title) LIKE " . $quoted . " OR
-                        LOWER(i.introtext) LIKE " . $quoted . " OR
-                        LOWER(i.`fulltext`) LIKE " . $quoted . " OR
-                        LOWER(i.extra_fields_search) LIKE " . $quoted . " OR
-                        LOWER(i.image_caption) LIKE " . $quoted . " OR
-                        LOWER(i.image_credits) LIKE " . $quoted . " OR
-                        LOWER(i.video_caption) LIKE " . $quoted . " OR
-                        LOWER(i.video_credits) LIKE " . $quoted . " OR
-                        LOWER(i.metadesc) LIKE " . $quoted . " OR
-                        LOWER(i.metakey) LIKE " . $quoted . "
-                    )";
-                } else {
-                    $query .= " AND LOWER(i.title) LIKE " . $quoted;
-                }
+                $query .= K2GlobalHelper::search($search, [
+                    'i.title',
+                    'i.alias',
+                ]);
             }
         }
 
@@ -141,7 +103,7 @@ class K2ModelItems extends K2Model
                 K2Model::addIncludePath(JPATH_SITE . '/components/com_k2/models');
                 $itemListModel = K2Model::getInstance('Itemlist', 'K2Model');
                 $categories = $itemListModel->getCategoryTree($filter_category);
-                $sql = @implode(',', $categories);
+                $sql = (is_array($categories) && count($categories)) ? implode(',', $categories) : '0';
                 $query .= " AND i.catid IN ({$sql})";
             } else {
                 $query .= " AND i.catid={$filter_category}";
@@ -160,14 +122,17 @@ class K2ModelItems extends K2Model
             $query .= " AND (i.language = " . $db->Quote($language) . " OR i.language = '*')";
         }
 
+        // --- Query containing GROUP BY and ORDER BY ---
+        $queryEnd = '';
+
         if ($filter_order == 'i.ordering') {
-            $query .= " ORDER BY i.catid, i.ordering {$filter_order_Dir}";
+            $queryEnd .= " ORDER BY i.catid, i.ordering {$filter_order_Dir}";
         } else {
-            $query .= " ORDER BY {$filter_order} {$filter_order_Dir}";
+            $queryEnd .= " ORDER BY {$filter_order} {$filter_order_Dir}";
         }
 
-        $query = str_ireplace('#__groups', '#__viewlevels', $query);
-        $query = str_ireplace('g.name', 'g.title', $query);
+        // --- Final query ---
+        $combinedQuery = $queryStart . $query . $queryEnd;
 
         // Plugin Events
         PluginHelper::importPlugin('k2');
@@ -179,13 +144,15 @@ class K2ModelItems extends K2Model
 
         // Trigger K2 plugins
         /* since J4 compatibility */
-        Factory::getApplication()->triggerEvent('onK2BeforeSetQuery', array(&$query));
+        Factory::getApplication()->triggerEvent('onK2BeforeSetQuery', array(&$combinedQuery));
 
-        $db->setQuery($query, $limitstart, $limit);
+        $db->setQuery($combinedQuery, $limitstart, $limit);
         $rows = $db->loadObjectList();
 
+        // --- Row counter ---
         if (count($rows)) {
-            $db->setQuery('SELECT FOUND_ROWS();');
+            $countQuery = "/* Backend / K2 / Items Count */ SELECT COUNT(*)" . $query;
+            $db->setQuery($countQuery);
             $this->getTotal = $db->loadResult();
         }
 
@@ -277,7 +244,7 @@ class K2ModelItems extends K2Model
         $cid = Factory::getApplication()->input->getVar('cid', array(0), 'post', 'array');
         $total = count($cid);
         $order = Factory::getApplication()->input->getVar('order', array(0), 'post', 'array');
-        ArrayHelper::toInteger($order, array(0));
+        $order = ArrayHelper::toInteger($order, array(0));
         $groupings = array();
         for ($i = 0; $i < $total; $i++) {
             $row = Table::getInstance('K2Item', 'Table');
@@ -363,7 +330,7 @@ class K2ModelItems extends K2Model
         $cid = Factory::getApplication()->input->getVar('cid', array(0), 'post', 'array');
         $total = count($cid);
         $order = Factory::getApplication()->input->getVar('order', array(0), 'post', 'array');
-        ArrayHelper::toInteger($order, array(0));
+        $order = ArrayHelper::toInteger($order, array(0));
         $groupings = array();
         for ($i = 0; $i < $total; $i++) {
             $row = Table::getInstance('K2Item', 'Table');
@@ -519,7 +486,7 @@ class K2ModelItems extends K2Model
         $itemModel = K2Model::getInstance('Item', 'K2Model');
         $db = Factory::getDbo();
         $cid = Factory::getApplication()->input->getVar('cid');
-        ArrayHelper::toInteger($cid);
+        $cid = ArrayHelper::toInteger($cid);
         $row = Table::getInstance('K2Item', 'Table');
         $copies = array();
         $nullDate = $db->getNullDate();
@@ -719,7 +686,7 @@ class K2ModelItems extends K2Model
         $app = Factory::getApplication();
         $db = Factory::getDbo();
         $cid = Factory::getApplication()->input->getVar('cid');
-        ArrayHelper::toInteger($cid);
+        $cid = ArrayHelper::toInteger($cid);
         foreach ($cid as $id) {
             $row = Table::getInstance('K2Item', 'Table');
             $row->load($id);

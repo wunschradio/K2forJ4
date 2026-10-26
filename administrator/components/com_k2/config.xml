@@ -133,6 +133,19 @@
             <option value="0">K2_HIDE</option>
             <option value="1">K2_SHOW</option>
         </param>
+        <param menu="hide" name="userOrdering" type="list" default="" label="K2_ITEM_ORDERING" description="">
+            <option value="">K2_DEFAULT</option>
+            <option value="date">K2_OLDEST_FIRST</option>
+            <option value="rdate">K2_MOST_RECENT_FIRST</option>
+            <option value="publishUp">K2_RECENTLY_PUBLISHED</option>
+            <option value="alpha">K2_TITLE_ALPHABETICAL</option>
+            <option value="ralpha">K2_TITLE_REVERSEALPHABETICAL</option>
+            <option value="order">K2_ORDERING</option>
+            <option value="rorder">K2_ORDERING_REVERSE</option>
+            <option value="hits">K2_MOST_POPULAR</option>
+            <option value="best">K2_HIGHEST_RATED</option>
+            <option value="rand">K2_RANDOM_ORDERING</option>
+        </param>
         <param menu="hide" name="userItemK2Plugins" type="radio" default="1" label="K2_ENABLE_K2_PLUGINS" description="">
             <option value="0">K2_NO</option>
             <option value="1">K2_YES</option>
@@ -233,7 +246,7 @@
     <!-- ######################### Images ######################### -->
     <params group="K2_IMAGES" addpath="/administrator/components/com_k2/elements">
         <param menu="hide" name="" type="header" default="K2_IMAGE_SETTINGS" label="" description=""/>
-        <param menu="hide" name="imagesQuality" type="text" default="100" size="4" label="K2_QUALITY_USED_WHEN_PROCESSING_IMAGES" description=""/>
+        <param menu="hide" name="imagesQuality" type="text" default="90" size="4" label="K2_QUALITY_USED_WHEN_PROCESSING_IMAGES" description=""/>
         <param menu="hide" name="itemImageXS" type="text" default="100" size="4" label="K2_ITEM_XSMALL_IMAGE_WIDTH_IN_PX" description=""/>
         <param menu="hide" name="itemImageS" type="text" default="200" size="4" label="K2_ITEM_SMALL_IMAGE_WIDTH_IN_PX" description=""/>
         <param menu="hide" name="itemImageM" type="text" default="400" size="4" label="K2_ITEM_MEDIUM_IMAGE_WIDTH_IN_PX" description=""/>
@@ -728,6 +741,19 @@
             <option value="0">K2_HIDE</option>
             <option value="1">K2_SHOW</option>
         </field>
+        <field menu="hide" name="userOrdering" type="list" default="" label="K2_ITEM_ORDERING" description="">
+            <option value="">K2_DEFAULT</option>
+            <option value="date">K2_OLDEST_FIRST</option>
+            <option value="rdate">K2_MOST_RECENT_FIRST</option>
+            <option value="publishUp">K2_RECENTLY_PUBLISHED</option>
+            <option value="alpha">K2_TITLE_ALPHABETICAL</option>
+            <option value="ralpha">K2_TITLE_REVERSEALPHABETICAL</option>
+            <option value="order">K2_ORDERING</option>
+            <option value="rorder">K2_ORDERING_REVERSE</option>
+            <option value="hits">K2_MOST_POPULAR</option>
+            <option value="best">K2_HIGHEST_RATED</option>
+            <option value="rand">K2_RANDOM_ORDERING</option>
+        </field>
         <field menu="hide" name="userItemK2Plugins" type="radio" default="1" label="K2_ENABLE_K2_PLUGINS" description="">
             <option value="0">K2_NO</option>
             <option value="1">K2_YES</option>
@@ -828,7 +854,7 @@
     <!-- ######################### Images ######################### -->
     <fieldset name="COM_K2_IMAGES" label="K2_IMAGES" addfieldpath="/administrator/components/com_k2/elements">
         <field menu="hide" name="" type="header" default="K2_IMAGE_SETTINGS" label="" description=""/>
-        <field menu="hide" name="imagesQuality" type="text" default="100" size="4" label="K2_QUALITY_USED_WHEN_PROCESSING_IMAGES" description=""/>
+        <field menu="hide" name="imagesQuality" type="text" default="90" size="4" label="K2_QUALITY_USED_WHEN_PROCESSING_IMAGES" description=""/>
         <field menu="hide" name="itemImageXS" type="text" default="100" size="4" label="K2_ITEM_XSMALL_IMAGE_WIDTH_IN_PX" description=""/>
         <field menu="hide" name="itemImageS" type="text" default="200" size="4" label="K2_ITEM_SMALL_IMAGE_WIDTH_IN_PX" description=""/>
         <field menu="hide" name="itemImageM" type="text" default="400" size="4" label="K2_ITEM_MEDIUM_IMAGE_WIDTH_IN_PX" description=""/>

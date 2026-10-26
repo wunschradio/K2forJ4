@@ -16,7 +16,6 @@ use Joomla\Utilities\ArrayHelper;
 use Joomla\CMS\Table\Table;
 use Joomla\CMS\Factory;
 use Joomla\CMS\Component\ComponentHelper;
-use Joomla\CMS\Pagination\Pagination;
 use Joomla\Registry\Registry;
 use Joomla\CMS\Plugin\PluginHelper;
 use Joomla\CMS\Language\Text;
@@ -25,8 +24,15 @@ use K2File as File;
 
 jimport('joomla.application.component.model');
 
+Table::addIncludePath(JPATH_ADMINISTRATOR . '/components/com_k2/tables');
+
+JLoader::register('K2GlobalHelper', JPATH_SITE . '/media/k2/assets/helpers/global.php');
+JLoader::register('K2Pagination', JPATH_ADMINISTRATOR . '/components/com_k2/lib/k2pagination.php');
+
 class K2ModelCategories extends K2Model
 {
+    private $getTotal = 0;
+
     public function getData()
     {
         $app = Factory::getApplication();
@@ -36,77 +42,24 @@ class K2ModelCategories extends K2Model
         $db = Factory::getDbo();
         $limit = $app->getUserStateFromRequest('global.list.limit', 'limit', $app->getCfg('list_limit'), 'int');
         $limitstart = $app->getUserStateFromRequest($option . $view . '.limitstart', 'limitstart', 0, 'int');
+        $language = $app->getUserStateFromRequest($option . $view . 'language', 'language', '', 'string');
+
         $search = $app->getUserStateFromRequest($option . $view . 'search', 'search', '', 'string');
-        $search = StringHelper::strtolower($search);
-        $search = trim(preg_replace('/[^\p{L}\p{N}\s\"\-_]/u', '', $search));
+
+        $filter_category = $app->getUserStateFromRequest($option . $view . 'filter_category', 'filter_category', 0, 'int');
         $filter_order = $app->getUserStateFromRequest($option . $view . 'filter_order', 'filter_order', 'c.ordering', 'cmd');
         $filter_order_Dir = $app->getUserStateFromRequest($option . $view . 'filter_order_Dir', 'filter_order_Dir', '', 'word');
-        $filter_trash = $app->getUserStateFromRequest($option . $view . 'filter_trash', 'filter_trash', 0, 'int');
         $filter_state = $app->getUserStateFromRequest($option . $view . 'filter_state', 'filter_state', -1, 'int');
-        $language = $app->getUserStateFromRequest($option . $view . 'language', 'language', '', 'string');
-        $filter_category = $app->getUserStateFromRequest($option . $view . 'filter_category', 'filter_category', 0, 'int');
+        $filter_trash = $app->getUserStateFromRequest($option . $view . 'filter_trash', 'filter_trash', 0, 'int');
 
-        $query = "SELECT c.*, g.name AS groupname, exfg.name as extra_fields_group FROM #__k2_categories as c LEFT JOIN #__groups AS g ON g.id = c.access LEFT JOIN #__k2_extra_fields_groups AS exfg ON exfg.id = c.extraFieldsGroup WHERE c.id>0";
+        $queryStart = "/* Backend / K2 / Categories */ SELECT c.*, g.title AS groupname, exfg.name as extra_fields_group
+            FROM #__k2_categories as c
+            LEFT JOIN #__viewlevels AS g ON g.id = c.access
+            LEFT JOIN #__k2_extra_fields_groups AS exfg ON exfg.id = c.extraFieldsGroup
+            WHERE c.id > 0";
 
-        if (!$filter_trash) {
-            $query .= " AND c.trash=0";
-        }
-
-        if ($search) {
-
-            // Detect exact search phrase using double quotes in search string
-            if (substr($search, 0, 1) == '"' && substr($search, -1) == '"') {
-                $exact = true;
-            } else {
-                $exact = false;
-            }
-
-            // Now completely strip double quotes
-            $search = trim(str_replace('"', '', $search));
-
-            // Escape remaining string
-            $escaped = $db->escape($search, true);
-
-            // Full phrase or set of words
-            if (strpos($escaped, ' ') !== false && !$exact) {
-                $escaped = explode(' ', $escaped);
-                $quoted = array();
-                foreach ($escaped as $key => $escapedWord) {
-                    $quoted[] = $db->Quote('%' . $escapedWord . '%', false);
-                }
-                if ($params->get('adminSearch') == 'full') {
-                    foreach ($quoted as $quotedWord) {
-                        $query .= " AND ( " .
-                            "LOWER(c.name) LIKE " . $quotedWord . " " .
-                            "OR LOWER(c.description) LIKE " . $quotedWord . " " .
-                            " )";
-                    }
-                } else {
-                    foreach ($quoted as $quotedWord) {
-                        $query .= " AND LOWER(c.name) LIKE " . $quotedWord;
-                    }
-                }
-            } // Single word or exact phrase to search for (wrapped in double quotes in the search block)
-            else {
-                $quoted = $db->Quote('%' . $escaped . '%', false);
-
-                if ($params->get('adminSearch') == 'full') {
-                    $query .= " AND ( " .
-                        "LOWER(c.name) LIKE " . $quoted . " " .
-                        "OR LOWER(c.description) LIKE " . $quoted . " " .
-                        " )";
-                } else {
-                    $query .= " AND LOWER(c.name) LIKE " . $quoted;
-                }
-            }
-        }
-
-        if ($filter_state > -1) {
-            $query .= " AND c.published={$filter_state}";
-        }
-        if ($language) {
-            $query .= " AND (c.language = " . $db->Quote($language) . " OR c.language = '*')";
-        }
+        // Conditions (shared by the data and the count query)
+        $query = '';
 
         if ($filter_category) {
             K2Model::addIncludePath(JPATH_SITE . '/components/com_k2/models');
@@ -114,14 +67,43 @@ class K2ModelCategories extends K2Model
             $tree = $ItemlistModel->getCategoryTree($filter_category);
             $query .= " AND c.id IN (" . implode(',', $tree) . ")";
         }
+        if ($filter_state > -1) {
+            $query .= " AND c.published = {$filter_state}";
+        }
+        if (!$filter_trash) {
+            $query .= " AND c.trash = 0";
+        }
+        if ($language) {
+            $query .= " AND (c.language = " . $db->Quote($language) . " OR c.language = '*')";
+        }
 
-        $query .= " ORDER BY {$filter_order} {$filter_order_Dir}";
+        if ($search) {
+            if ($params->get('adminSearch') == 'full') {
+                $query .= K2GlobalHelper::search($search, array(
+                    'c.name',
+                    'c.alias',
+                    'c.description',
+                ));
+            } else {
+                $query .= K2GlobalHelper::search($search, array(
+                    'c.name',
+                    'c.alias',
+                ));
+            }
+        }
 
-        $query = StringHelper::str_ireplace('#__groups', '#__viewlevels', $query);
-        $query = StringHelper::str_ireplace('g.name AS groupname', 'g.title AS groupname', $query);
+        $queryEnd = " ORDER BY {$filter_order} {$filter_order_Dir}";
 
-        $db->setQuery($query);
+        $db->setQuery($queryStart . $query . $queryEnd);
         $rows = $db->loadObjectList();
+
+        // Row counter
+        $this->getTotal = 0;
+        if (count($rows)) {
+            $db->setQuery("/* Backend / K2 / Categories Count */ SELECT COUNT(c.id) FROM #__k2_categories as c WHERE c.id > 0" . $query);
+            $this->getTotal = (int)$db->loadResult();
+        }
+
         foreach ($rows as $row) {
             $row->parent_id = $row->parent;
             $row->title = $row->name;
@@ -144,13 +126,11 @@ class K2ModelCategories extends K2Model
             }
             $categories = $this->indentRows($rows, $root);
         }
-        if (isset($categories)) {
-            $total = count($categories);
-        } else {
-            $total = 0;
-        }
-        jimport('joomla.html.pagination');
-        $pageNav = new Pagination($total, $limitstart, $limit);
+
+        $total = count($categories);
+        $pageNav = new K2Pagination($total, $limitstart, $limit);
+
+        // Display category inheritance
         $categories = @array_slice($categories, $pageNav->limitstart, $pageNav->limit);
         foreach ($categories as $category) {
             $category->parameters = class_exists('JParameter') ? new JParameter($category->params) : new Registry($category->params);
@@ -166,87 +146,7 @@ class K2ModelCategories extends K2Model
 
     public function getTotal()
     {
-        $app = Factory::getApplication();
-        $params = ComponentHelper::getParams('com_k2');
-        $option = Factory::getApplication()->input->getCmd('option');
-        $view = Factory::getApplication()->input->getCmd('view');
-        $db = Factory::getDbo();
-        $limit = $app->getUserStateFromRequest('global.list.limit', 'limit', $app->getCfg('list_limit'), 'int');
-        $limitstart = $app->getUserStateFromRequest($option . '.limitstart', 'limitstart', 0, 'int');
-        $search = $app->getUserStateFromRequest($option . $view . 'search', 'search', '', 'string');
-        $search = StringHelper::strtolower($search);
-        $search = trim(preg_replace('/[^\p{L}\p{N}\s\"\-_]/u', '', $search));
-        $filter_trash = $app->getUserStateFromRequest($option . $view . 'filter_trash', 'filter_trash', 0, 'int');
-        $filter_state = $app->getUserStateFromRequest($option . $view . 'filter_state', 'filter_state', 1, 'int');
-        $language = $app->getUserStateFromRequest($option . $view . 'language', 'language', '', 'string');
-        $filter_category = $app->getUserStateFromRequest($option . $view . 'filter_category', 'filter_category', 0, 'int');
-
-        $query = "SELECT COUNT(*) FROM #__k2_categories WHERE id>0";
-
-        if (!$filter_trash) {
-            $query .= " AND trash=0";
-        }
-
-        if ($search) {
-            // Detect exact search phrase using double quotes in search string
-            if (substr($search, 0, 1) == '"' && substr($search, -1) == '"') {
-                $exact = true;
-            } else {
-                $exact = false;
-            }
-
-            // Now completely strip double quotes
-            $search = trim(str_replace('"', '', $search));
-
-            // Escape remaining string
-            $escaped = $db->escape($search, true);
-
-            // Full phrase or set of words
-            if (strpos($escaped, ' ') !== false && !$exact) {
-                $escaped = explode(' ', $escaped);
-                $quoted = array();
-                foreach ($escaped as $key => $escapedWord) {
-                    $quoted[] = $db->Quote('%' . $escapedWord . '%', false);
-                }
-                if ($params->get('adminSearch') == 'full') {
-                    foreach ($quoted as $quotedWord) {
-                        $query .= " AND (LOWER(name) LIKE " . $quotedWord . " OR LOWER(description) LIKE " . $quotedWord . ")";
-                    }
-                } else {
-                    foreach ($quoted as $quotedWord) {
-                        $query .= " AND LOWER(name) LIKE " . $quotedWord;
-                    }
-                }
-            } // Single word or exact phrase to search for (wrapped in double quotes in the search block)
-            else {
-                $quoted = $db->Quote('%' . $escaped . '%', false);
-
-                if ($params->get('adminSearch') == 'full') {
-                    $query .= " AND (LOWER(name) LIKE " . $quoted . " OR LOWER(description) LIKE " . $quoted . ")";
-                } else {
-                    $query .= " AND LOWER(name) LIKE " . $quoted;
-                }
-            }
-        }
-
-        if ($filter_state > -1) {
-            $query .= " AND published={$filter_state}";
-        }
-
-        if ($language) {
-            $query .= " AND (language = " . $db->Quote($language) . " OR language = '*')";
-        }
-
-        if ($filter_category) {
-            K2Model::addIncludePath(JPATH_SITE . '/components/com_k2/models');
-            $ItemlistModel = K2Model::getInstance('Itemlist', 'K2Model');
-            $tree = $ItemlistModel->getCategoryTree($filter_category);
-            $query .= " AND id IN (" . implode(',', $tree) . ")";
-        }
-
-        $db->setQuery($query);
-        $total = $db->loadResult();
-        return $total;
+        return $this->getTotal;
     }
 
     public function indentRows(&$rows, $root = 0)
@@ -326,7 +226,7 @@ class K2ModelCategories extends K2Model
         $cid = Factory::getApplication()->input->getVar('cid', array(0), 'post', 'array');
         $total = count($cid);
         $order = Factory::getApplication()->input->getVar('order', array(0), 'post', 'array');
-        ArrayHelper::toInteger($order, array(0));
+        $order = ArrayHelper::toInteger($order, array(0));
         $groupings = array();
         for ($i = 0; $i < $total; $i++) {
             $row = Table::getInstance('K2Category', 'Table');
@@ -467,11 +367,11 @@ class K2ModelCategories extends K2Model
         $db = Factory::getDbo();
         $cid = Factory::getApplication()->input->getVar('cid');
         $row = Table::getInstance('K2Category', 'Table');
-        ArrayHelper::toInteger($cid);
+        $cid = ArrayHelper::toInteger($cid);
         K2Model::addIncludePath(JPATH_SITE . '/components/com_k2/models');
         $model = K2Model::getInstance('Itemlist', 'K2Model');
         $categories = $model->getCategoryTree($cid);
-        $sql = @implode(',', $categories);
+        $sql = (is_array($categories) && count($categories)) ? implode(',', $categories) : '0';
         $db = Factory::getDbo();
         $query = "UPDATE #__k2_categories SET trash=1  WHERE id IN ({$sql})";
         $db->setQuery($query);
@@ -523,7 +423,7 @@ class K2ModelCategories extends K2Model
         }
         // Restore also the items of the categories
         if (count($restored)) {
-            ArrayHelper::toInteger($restored);
+            $restored = ArrayHelper::toInteger($restored);
             $db->setQuery('UPDATE #__k2_items SET trash = 0 WHERE catid IN (' . implode(',', $restored) . ') AND trash = 1');
             $db->execute();
         }
@@ -550,7 +450,7 @@ class K2ModelCategories extends K2Model
         jimport('joomla.filesystem.file');
         $db = Factory::getDbo();
         $cid = Factory::getApplication()->input->getVar('cid');
-        ArrayHelper::toInteger($cid);
+        $cid = ArrayHelper::toInteger($cid);
         PluginHelper::importPlugin('finder');
         /* since J4 compatibility */
         /* JDispatcher removed in J4 */
@@ -665,7 +565,7 @@ class K2ModelCategories extends K2Model
         jimport('joomla.filesystem.file');
         $app = Factory::getApplication();
         $cid = Factory::getApplication()->input->getVar('cid');
-        ArrayHelper::toInteger($cid);
+        $cid = ArrayHelper::toInteger($cid);
         $copies = array();
         foreach ($cid as $id) {
             // Load source category
