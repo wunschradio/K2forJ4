@@ -254,7 +254,7 @@ $app = Factory::getApplication();
                         <?php endif; ?>
                         <?php if (count(array_filter($this->K2PluginsItemOther)) && $this->params->get('showK2Plugins')): ?>
                             <li id="tabPlugins"><a href="#k2TabPlugins"><i
-                                            class="fa fa-wrench"></i><?php echo Text::_('K2_PLUGINS'); ?></a></li>
+                                            class="fa fa-wrench"></i><?php echo Text::_('K2_ITEM_PLUGINS_TAB'); ?></a></li>
                         <?php endif; ?>
                     </ul>
 
