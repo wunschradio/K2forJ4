@@ -473,6 +473,33 @@ class K2ModelItem extends K2Model
             $row->gallery = $savedRow->gallery;
         }
 
+        // Bildergalerie aus dem Entwurfsordner übernehmen (com_k2_galleries: Bilder wurden vor dem ersten Speichern hochgeladen)
+        $galleryDraft = Factory::getApplication()->input->getCmd('k2gallery_draft');
+
+        if ($galleryDraft && preg_match('/^[a-f0-9]{16}$/', $galleryDraft) && $row->id) {
+            $draftDir  = JPATH_ROOT . '/media/k2/galleries/_tmp/' . $galleryDraft;
+            $targetDir = JPATH_ROOT . '/media/k2/galleries/' . (int) $row->id;
+
+            if (is_dir($draftDir)) {
+                if (!is_dir($targetDir)) {
+                    mkdir($targetDir, 0755, true);
+                }
+
+                foreach (array_diff(scandir($draftDir), ['.', '..']) as $draftFile) {
+                    if (is_file($draftDir . '/' . $draftFile) && !file_exists($targetDir . '/' . $draftFile)) {
+                        rename($draftDir . '/' . $draftFile, $targetDir . '/' . $draftFile);
+                    }
+                }
+
+                array_map('unlink', array_filter(glob($draftDir . '/*') ?: [], 'is_file'));
+                rmdir($draftDir);
+
+                if (glob($targetDir . '/*.{jpg,jpeg,png,gif}', GLOB_BRACE)) {
+                    $row->gallery = '{gallery}' . (int) $row->id . '{/gallery}';
+                }
+            }
+        }
+
         $flickrGallery = Factory::getApplication()->input->getString('flickrGallery');
         if ($flickrGallery) {
             $row->gallery = '{gallery}' . $flickrGallery . '{/gallery}';

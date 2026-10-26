@@ -402,7 +402,19 @@ $app = Factory::getApplication();
                                             <label><?php echo Text::_('K2_IMAGE_GALLERY'); ?>:</label>
                                         </div>
                                         <div class="itemAdditionalData">
-                                            <?php if($this->row->id) { ?>
+                                            <?php
+                                            // Neuer Beitrag: Bilder in einen Entwurfsordner, beim ersten Speichern übernimmt das Model sie
+                                            $galleryDraft = $this->row->id ? '' : bin2hex(random_bytes(8));
+                                            // Redakteurs-Schlüssel (Galerie bzw. Entwurf + Tag), damit das Fenster ohne Frontend-Login arbeitet;
+                                            // Prüfung in components/com_k2_galleries/tmpl/galleries/galleries.php
+                                            $galleryScope = $this->row->id ? (string) (int) $this->row->id : 'draft:' . $galleryDraft;
+                                            $galleryEkey  = substr(hash_hmac('sha256', 'com_k2_galleries:edit:' . $galleryScope . ':' . date('Ymd'), (string) Factory::getApplication()->get('secret')), 0, 32);
+                                            $gallerySrc   = \Joomla\CMS\Uri\Uri::root() . 'index.php?option=com_k2_galleries&view=galleries&type=k2&tmpl=component&'
+                                                . ($this->row->id ? 'gallery=' . (int) $this->row->id : 'draft=' . $galleryDraft) . '&ekey=' . $galleryEkey;
+                                            ?>
+                                            <?php if ($galleryDraft) : ?>
+                                                <input type="hidden" name="k2gallery_draft" value="<?php echo $galleryDraft; ?>">
+                                            <?php endif; ?>
                                             <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#k2GalleryModal">
                                                 <?php echo Text::_('K2_COM_BE_ITEM_SIGPRO_UPLOAD'); ?>
                                             </button>
@@ -415,27 +427,34 @@ $app = Factory::getApplication();
                                                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Schließen"></button>
                                                         </div>
                                                         <div class="modal-body" style="height: 80vh;">
-                                                            <iframe src="<?php echo \Joomla\CMS\Uri\Uri::root(); ?>index.php?option=com_k2_galleries&view=galleries&gallery=<?php echo $this->row->id; ?>&type=k2&tmpl=component"
+                                                            <iframe src="<?php echo htmlspecialchars($gallerySrc, ENT_QUOTES, 'UTF-8'); ?>"
                                                                     width="100%" height="100%" frameborder="0" style="border:0;"></iframe>
                                                         </div>
                                                     </div>
                                                 </div>
                                             </div>
-                                            <?php } else { ?>
-                                                <?php echo Text::_('K2_SAVE_FIRST'); ?>
-                                            <?php } ?>
                                         </div>
                                     </div>
-                                    <?php if($this->row->id) { ?>
                                     <div class="itemAdditionalField">
                                         <div class="itemAdditionalValue">
                                             <label><?php echo Text::_('K2_GALLERY_SHARE'); ?></label>
                                         </div>
                                         <div class="itemAdditionalData">
-                                            <?php
-                                                $link = Uri::root() . 'index.php?option=com_k2_galleries&view=galleries&gallery='.$this->row->id;
-                                                echo ($this->row->id) ? '<span onclick="navigator.clipboard.writeText(\'' . $link . '\')">' . $link . '</span>' : '';
-                                            ?>
+                                            <?php if ($this->row->id) : ?>
+                                                <?php
+                                                // Fotografen-Link: Schlüssel aus Galerie-ID und Secret der globalen Konfiguration,
+                                                // gleiche Berechnung in components/com_k2_galleries/tmpl/galleries/galleries.php
+                                                $galleryKey  = substr(hash_hmac('sha256', 'com_k2_galleries:' . (int) $this->row->id, (string) Factory::getApplication()->get('secret')), 0, 32);
+                                                $galleryLink = Uri::root() . 'index.php?option=com_k2_galleries&view=galleries&gallery=' . (int) $this->row->id . '&key=' . $galleryKey;
+                                                ?>
+                                                <div class="input-group" style="max-width: 50rem;">
+                                                    <input type="text" class="form-control" id="k2GalleryShareLink" readonly value="<?php echo htmlspecialchars($galleryLink, ENT_QUOTES, 'UTF-8'); ?>">
+                                                    <button type="button" class="btn btn-secondary" onclick="navigator.clipboard.writeText(document.getElementById('k2GalleryShareLink').value).then(() => { this.textContent = '<?php echo Text::_('K2_GALLERY_SHARE_COPIED', true); ?>'; })"><?php echo Text::_('K2_GALLERY_SHARE_COPY'); ?></button>
+                                                </div>
+                                                <div class="small text-muted mt-1"><?php echo Text::_('K2_GALLERY_SHARE_DESC'); ?></div>
+                                            <?php else : ?>
+                                                <?php echo Text::_('K2_GALLERY_SHARE_SAVE_FIRST'); ?>
+                                            <?php endif; ?>
                                         </div>
                                     </div>
 
@@ -445,7 +464,6 @@ $app = Factory::getApplication();
                                         </div>
                                         <div class="itemAdditionalData"></div>
                                     </div>
-                                    <?php } ?>
                                 <?php endif; ?>
                                 <div class="itemAdditionalField">
                                     <div class="itemAdditionalValue">
