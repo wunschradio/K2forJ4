@@ -418,7 +418,7 @@ use Joomla\CMS\Factory;
         <!-- Author Block -->
         <div class="itemAuthorBlock">
             <?php if ($this->item->params->get('itemAuthorImage') && !empty($this->item->author->avatar)): ?>
-                <img class="itemAuthorAvatar" src="<?php echo $this->item->author->avatar; ?>"
+                <img class="itemAuthorAvatar" src="<?php echo htmlspecialchars($this->item->author->avatar, ENT_QUOTES, 'UTF-8'); ?>"
                      alt="<?php echo K2HelperUtilities::cleanHtml($this->item->author->name); ?>"/>
             <?php endif; ?>
 
