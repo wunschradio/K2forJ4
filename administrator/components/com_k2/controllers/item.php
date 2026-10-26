@@ -47,12 +47,14 @@ class K2ControllerItem extends K2Controller
 
     public function deleteAttachment()
     {
+        Session::checkToken('request') or jexit('Invalid Token');
         $model = $this->getModel('item');
         $model->deleteAttachment();
     }
 
     public function tag()
     {
+        Session::checkToken('request') or jexit('Invalid Token');
         $model = $this->getModel('tag');
         $model->addTag();
     }

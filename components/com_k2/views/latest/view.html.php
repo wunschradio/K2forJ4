@@ -123,7 +123,7 @@ class K2ViewLatest extends K2View
                         Factory::getApplication()->input->set('limit', $limit);
                         Factory::getApplication()->input->set('clearFlag', true);
 
-                        $category->name = htmlspecialchars($category->name, ENT_QUOTES, 'utf-8');
+                        $category->name = htmlspecialchars($category->name, ENT_QUOTES, 'UTF-8');
                         if ($limit) {
                             $category->items = $model->getData('rdate');
 
@@ -212,13 +212,13 @@ class K2ViewLatest extends K2View
                             /* since J4 compatibility */
                             $results = Factory::getApplication()->triggerEvent('onK2UserDisplay', array(&$userObject->profile, &$params, $limitstart));
                             $userObject->event->K2UserDisplay = trim(implode("\n", $results));
-                            $userObject->profile->url = isset($userObject->profile->url) ? htmlspecialchars($userObject->profile->url, ENT_QUOTES, 'utf-8') : $userObject->profile->url;
+                            $userObject->profile->url = isset($userObject->profile->url) ? htmlspecialchars($userObject->profile->url, ENT_QUOTES, 'UTF-8') : $userObject->profile->url;
                         }
 
                         $link = K2HelperRoute::getUserRoute($userObject->id);
                         $userObject->link = Route::_($link);
                         $userObject->feed = Route::_($link . '&format=feed');
-                        $userObject->name = htmlspecialchars($userObject->name, ENT_QUOTES, 'utf-8');
+                        $userObject->name = htmlspecialchars($userObject->name, ENT_QUOTES, 'UTF-8');
                         if ($limit) {
                             $userObject->items = $model->getAuthorLatest(0, $limit, $userID);
 
@@ -328,7 +328,7 @@ class K2ViewLatest extends K2View
             if ($params->get('facebookMetatags', 1)) {
                 $document->setMetaData('og:url', $currentAbsoluteUrl);
                 $document->setMetaData('og:type', 'website');
-                $document->setMetaData('og:title', filter_var($metaTitle, FILTER_UNSAFE_RAW));
+                $document->setMetaData('og:title', strip_tags($metaTitle));
                 $document->setMetaData('og:description', K2HelperUtilities::characterLimit($metaDesc, 300)); // 300 chars limit for Facebook post sharing
             }
 
@@ -338,7 +338,7 @@ class K2ViewLatest extends K2View
                 if ($params->get('twitterUsername')) {
                     $document->setMetaData('twitter:site', '@' . $params->get('twitterUsername'));
                 }
-                $document->setMetaData('twitter:title', filter_var($metaTitle, FILTER_UNSAFE_RAW));
+                $document->setMetaData('twitter:title', strip_tags($metaTitle));
                 $document->setMetaData('twitter:description', K2HelperUtilities::characterLimit($metaDesc, 200)); // 200 chars limit for Twitter post sharing
             }
         }

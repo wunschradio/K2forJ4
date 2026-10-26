@@ -69,7 +69,7 @@ use Joomla\CMS\Plugin\PluginHelper;
                                 <tr>
                                     <td><a target="_blank" href="https://github.com/verot/class.upload.php">class.upload.php</a>
                                     </td>
-                                    <td>0.34dev (modified by JoomlaWorks)</td>
+                                    <td>10/09/2024 (modified by JoomlaWorks)</td>
                                     <td><?php echo Text::_('K2_PHP_LIBRARY'); ?></td>
                                     <td>GNU/GPL v2</td>
                                 </tr>
@@ -95,7 +95,7 @@ use Joomla\CMS\Plugin\PluginHelper;
                                 <tr>
                                     <td><a target="_blank" href="https://github.com/Studio-42/elFinder">elFinder</a>
                                     </td>
-                                    <td>2.1.50</td>
+                                    <td>2.1.69</td>
                                     <td><?php echo Text::_('K2_INFO_FILE_MANAGER'); ?></td>
                                     <td>BSD</td>
                                 </tr>

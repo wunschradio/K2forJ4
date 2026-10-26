@@ -66,7 +66,7 @@ class TableK2Item extends K2Table
     public $plugins = '';
     public $language = null;
 
-    public function __construct(&$db)
+    public function __construct($db)
     {
         parent::__construct('#__k2_items', 'id', $db);
     }
@@ -132,14 +132,16 @@ class TableK2Item extends K2Table
             $db = Factory::getDbo();
             if ($this->id) {
                 $db->setQuery("SELECT id FROM #__k2_items WHERE alias = " . $db->quote($this->alias) . " AND id != " . (int)$this->id);
-                $result = count($db->loadObjectList());
+                $resultList = $db->loadObjectList();
+                $result = is_array($resultList) ? count($resultList) : 0;
                 if ($result > 0) {
                     $this->alias .= '-' . (int)$this->id;
                     $app->enqueueMessage(Text::_('K2_WARNING_DUPLICATE_TITLE_ALIAS_DETECTED'), 'notice');
                 }
             } else {
                 $db->setQuery("SELECT id FROM #__k2_items WHERE alias = " . $db->quote($this->alias));
-                $result = count($db->loadObjectList());
+                $resultList = $db->loadObjectList();
+                $result = is_array($resultList) ? count($resultList) : 0;
                 if ($result > 0) {
                     $this->alias .= '-' . date('YmdHi');
                     $app->enqueueMessage(Text::_('K2_WARNING_DUPLICATE_TITLE_ALIAS_DETECTED'), 'notice');
@@ -151,13 +153,13 @@ class TableK2Item extends K2Table
 
     public function bind($array, $ignore = '')
     {
-        if (key_exists('params', $array) && is_array($array['params'])) {
+        if (array_key_exists('params', $array) && is_array($array['params'])) {
             $registry = new Registry();
             $registry->loadArray($array['params']);
             $array['params'] = $registry->toString();
         }
 
-        if (key_exists('plugins', $array) && is_array($array['plugins'])) {
+        if (array_key_exists('plugins', $array) && is_array($array['plugins'])) {
             $registry = new Registry();
             $registry->loadArray($array['plugins']);
             $array['plugins'] = $registry->toString();
@@ -193,6 +195,9 @@ class TableK2Item extends K2Table
             $orders = $this->_db->loadObjectList();
         } catch (Exception $e) {
             Factory::getApplication()->enqueueMessage(Text::sprintf('JLIB_DATABASE_ERROR_FUNCTION_FAILED', $e->getCode(), $e->getMessage()), 'ERROR');
+            return false;
+        }
+        if (!is_array($orders) || count($orders) == 0) {
             return false;
         }
 

@@ -292,8 +292,13 @@ class Com_K2InstallerScript
 		$query = "SHOW INDEX FROM #__k2_items";
 		$db->setQuery($query);
 		$itemIndices = $db->loadObjectList();
+
 		$itemKeys_item = false;
 		$itemKeys_idx_item = false;
+		$itemKeys_idx_items_common = false;
+		$itemKeys_idx_items_common_backend = false;
+		$itemKeys_idx_items_authors = false;
+
 		foreach ($itemIndices as $index) {
 			if ($index->Key_name == 'item') {
 				$itemKeys_item = true;
@@ -301,14 +306,39 @@ class Com_K2InstallerScript
 			if ($index->Key_name == 'idx_item') {
 				$itemKeys_idx_item = true;
 			}
+			if ($index->Key_name == 'idx_items_common') {
+				$itemKeys_idx_items_common = true;
+			}
+			if ($index->Key_name == 'idx_items_common_backend') {
+				$itemKeys_idx_items_common_backend = true;
+			}
+			if ($index->Key_name == 'idx_items_authors') {
+				$itemKeys_idx_items_authors = true;
+			}
 		}
 		if ($itemKeys_item) {
 			$query = "ALTER TABLE #__k2_items DROP INDEX `item`";
 			$db->setQuery($query);
 			$db->execute();
 		}
-		if (!$itemKeys_idx_item) {
-			$query = "ALTER TABLE #__k2_items ADD INDEX `idx_item` (`published`,`publish_up`,`publish_down`,`trash`,`access`)";
+		// Replace the old generic index with indices matching the itemlist and backend queries
+		if ($itemKeys_idx_item) {
+			$query = "ALTER TABLE #__k2_items DROP INDEX `idx_item`";
+			$db->setQuery($query);
+			$db->execute();
+		}
+		if (!$itemKeys_idx_items_common) {
+			$query = "ALTER TABLE #__k2_items ADD INDEX `idx_items_common` (`catid`,`published`,`access`,`trash`,`publish_up`,`publish_down`,`id`)";
+			$db->setQuery($query);
+			$db->execute();
+		}
+		if (!$itemKeys_idx_items_common_backend) {
+			$query = "ALTER TABLE #__k2_items ADD INDEX `idx_items_common_backend` (`trash`,`id`)";
+			$db->setQuery($query);
+			$db->execute();
+		}
+		if (!$itemKeys_idx_items_authors) {
+			$query = "ALTER TABLE #__k2_items ADD INDEX `idx_items_authors` (`created_by`,`created_by_alias`,`published`,`access`,`trash`,`publish_up`,`publish_down`,`id`)";
 			$db->setQuery($query);
 			$db->execute();
 		}
@@ -321,6 +351,21 @@ class Com_K2InstallerScript
 			$db->execute();
 
 			$query = "ALTER TABLE #__k2_categories ADD INDEX `idx_language` (`language`)";
+			$db->setQuery($query);
+			$db->execute();
+		}
+
+		$query = "SHOW INDEX FROM #__k2_categories";
+		$db->setQuery($query);
+		$indexes = $db->loadObjectList();
+		$indexExists = false;
+		foreach ($indexes as $index) {
+			if ($index->Key_name == 'idx_category') {
+				$indexExists = true;
+			}
+		}
+		if (!$indexExists) {
+			$query = "ALTER TABLE #__k2_categories ADD INDEX `idx_category` (`published`,`access`,`trash`)";
 			$db->setQuery($query);
 			$db->execute();
 		}
@@ -366,6 +411,21 @@ class Com_K2InstallerScript
 		$fields = $db->getTableColumns('#__k2_tags');
 		if (!array_key_exists('description', $fields)) {
 			$query = "ALTER TABLE #__k2_tags ADD `description` text NOT NULL";
+			$db->setQuery($query);
+			$db->execute();
+		}
+
+		$query = "SHOW INDEX FROM #__k2_tags_xref";
+		$db->setQuery($query);
+		$tagXrefIndices = $db->loadObjectList();
+		$tagXrefKey_idx_tags_xref_common = false;
+		foreach ($tagXrefIndices as $index) {
+			if ($index->Key_name == 'idx_tags_xref_common') {
+				$tagXrefKey_idx_tags_xref_common = true;
+			}
+		}
+		if (!$tagXrefKey_idx_tags_xref_common) {
+			$query = "ALTER TABLE #__k2_tags_xref ADD INDEX `idx_tags_xref_common` (`tagID`,`itemID`)";
 			$db->setQuery($query);
 			$db->execute();
 		}

@@ -386,7 +386,7 @@ $selector = 'k2StatsTabs'.$module->id;
         <tbody>
         <tr>
             <td><?php echo Text::_('K2_ITEMS'); ?></td>
-            <td><?php echo $statistics->numOfItems; ?> (<?php echo $statistics->numOfFeaturedItems.' '.Text::_('K2_FEATURED').' - '.$statistics->numOfTrashedItems.' '.Text::_('K2_TRASHED'); ?>)</td>
+            <td><?php echo $statistics->numOfItems; ?> (<?php echo $statistics->numOfDraftItems.' '.Text::_('K2_DRAFTS').' - '.$statistics->numOfFeaturedItems.' '.Text::_('K2_FEATURED').' - '.$statistics->numOfTrashedItems.' '.Text::_('K2_TRASHED'); ?>)</td>
         </tr>
         <tr>
             <td><?php echo Text::_('K2_CATEGORIES'); ?></td>

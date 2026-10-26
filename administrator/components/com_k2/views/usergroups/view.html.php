@@ -12,11 +12,12 @@ defined('_JEXEC') or die;
 
 use Joomla\CMS\Factory;
 use Joomla\CMS\Component\ComponentHelper;
-use Joomla\CMS\Pagination\Pagination;
 use Joomla\CMS\Language\Text;
 use Joomla\CMS\Toolbar\ToolbarHelper;
 
 jimport('joomla.application.component.view');
+
+JLoader::register('K2Pagination', JPATH_ADMINISTRATOR . '/components/com_k2/lib/k2pagination.php');
 
 class K2ViewUserGroups extends K2View
 {
@@ -45,8 +46,7 @@ class K2ViewUserGroups extends K2View
 
         $this->rows = $userGroups;
 
-        jimport('joomla.html.pagination');
-        $pageNav = new Pagination($total, $limitstart, $limit);
+        $pageNav = new K2Pagination($total, $limitstart, $limit);
         $this->page = $pageNav;
 
         $lists = array();

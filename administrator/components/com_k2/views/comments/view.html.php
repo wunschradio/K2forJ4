@@ -18,9 +18,10 @@ use Joomla\CMS\Component\ComponentHelper;
 use Joomla\CMS\Language\Text;
 use Joomla\CMS\Router\Route;
 use Joomla\CMS\HTML\HTMLHelper;
-use Joomla\CMS\Pagination\Pagination;
 
 jimport('joomla.application.component.view');
+
+JLoader::register('K2Pagination', JPATH_ADMINISTRATOR . '/components/com_k2/lib/k2pagination.php');
 
 class K2ViewComments extends K2View
 {
@@ -42,9 +43,11 @@ class K2ViewComments extends K2View
         $filter_state = $app->getUserStateFromRequest($option . $view . 'filter_state', 'filter_state', -1, 'int');
         $filter_category = $app->getUserStateFromRequest($option . $view . 'filter_category', 'filter_category', 0, 'int');
         $filter_author = $app->getUserStateFromRequest($option . $view . 'filter_author', 'filter_author', 0, 'int');
+
         $search = $app->getUserStateFromRequest($option . $view . 'search', 'search', '', 'string');
         $search = StringHelper::strtolower($search);
-        $search = trim(preg_replace('/[^\p{L}\p{N}\s\"\.\@\-_]/u', '', $search));
+        $search = StringHelper::trim(preg_replace('/[^\p{L}\p{N}\s\-.,:!?\'"()\@]/u', '', $search));
+
         if ($app->isClient('site')) {
             $filter_author = $user->id;
             Factory::getApplication()->input->set('filter_author', $user->id);
@@ -95,12 +98,16 @@ class K2ViewComments extends K2View
 
         K2Model::addIncludePath(JPATH_COMPONENT_ADMINISTRATOR . '/models');
         $model = K2Model::getInstance('Comments', 'K2Model');
-        $total = $model->getTotal();
+        // getData() also computes the total, so it must run first
         $comments = $model->getData();
+        $total = $model->getTotal();
 
         if ($limitstart > $total - $limit) {
             $limitstart = max(0, (int)(ceil($total / $limit) - 1) * $limit);
             Factory::getApplication()->input->set('limitstart', $limitstart);
+            if (!count($comments) && $total) {
+                $comments = $model->getData();
+            }
         }
 
         $reportLink = $app->isClient('administrator') ? 'index.php?option=com_k2&view=user&task=report&id=' : 'index.php?option=com_k2&view=comments&task=reportSpammer&id=';
@@ -133,9 +140,7 @@ class K2ViewComments extends K2View
         }
         $this->rows = $comments;
 
-        // Pagination
-        jimport('joomla.html.pagination');
-        $pageNav = new Pagination($total, $limitstart, $limit);
+        $pageNav = new K2Pagination($total, $limitstart, $limit);
         $this->page = $pageNav;
 
         $lists = array();

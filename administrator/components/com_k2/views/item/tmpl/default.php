@@ -14,6 +14,7 @@ use Joomla\CMS\Factory;
 use Joomla\CMS\HTML\HTMLHelper;
 use Joomla\CMS\Language\Text;
 use Joomla\CMS\Router\Route;
+use Joomla\CMS\Session\Session;
 use Joomla\CMS\Uri\Uri;
 use Joomla\CMS\Component\ComponentHelper;
 
@@ -283,9 +284,11 @@ $app = Factory::getApplication();
                             <div class="itemPlugins itemPluginsContent">
                                 <?php foreach ($this->K2PluginsItemContent as $K2Plugin): ?>
                                     <?php if (!is_null($K2Plugin)): ?>
-                                        <h3><?php echo $K2Plugin->name; ?></h3>
-                                        <div class="itemAdditionalData">
-                                            <?php echo $K2Plugin->fields; ?>
+                                        <div class="itemPlugin k2Plugin-<?php echo preg_replace('/[^\p{L}\p{N}_]/u', '', ucwords(strtolower($K2Plugin->name))); ?>">
+                                            <h3><?php echo $K2Plugin->name; ?></h3>
+                                            <div class="itemAdditionalData">
+                                                <?php echo $K2Plugin->fields; ?>
+                                            </div>
                                         </div>
                                     <?php endif; ?>
                                 <?php endforeach; ?>
@@ -354,9 +357,11 @@ $app = Factory::getApplication();
                                 <div class="itemPlugins itemPluginsImage">
                                     <?php foreach ($this->K2PluginsItemImage as $K2Plugin): ?>
                                         <?php if (!is_null($K2Plugin)): ?>
-                                            <h3><?php echo $K2Plugin->name; ?></h3>
-                                            <div class="itemAdditionalData">
-                                                <?php echo $K2Plugin->fields; ?>
+                                            <div class="itemPlugin k2Plugin-<?php echo preg_replace('/[^\p{L}\p{N}_]/u', '', ucwords(strtolower($K2Plugin->name))); ?>">
+                                                <h3><?php echo $K2Plugin->name; ?></h3>
+                                                <div class="itemAdditionalData">
+                                                    <?php echo $K2Plugin->fields; ?>
+                                                </div>
                                             </div>
                                         <?php endif; ?>
                                     <?php endforeach; ?>
@@ -480,9 +485,11 @@ $app = Factory::getApplication();
                                 <div class="itemPlugins itemPluginsImageGallery">
                                     <?php foreach ($this->K2PluginsItemGallery as $K2Plugin): ?>
                                         <?php if (!is_null($K2Plugin)): ?>
-                                            <h3><?php echo $K2Plugin->name; ?></h3>
-                                            <div class="itemAdditionalData">
-                                                <?php echo $K2Plugin->fields; ?>
+                                            <div class="itemPlugin k2Plugin-<?php echo preg_replace('/[^\p{L}\p{N}_]/u', '', ucwords(strtolower($K2Plugin->name))); ?>">
+                                                <h3><?php echo $K2Plugin->name; ?></h3>
+                                                <div class="itemAdditionalData">
+                                                    <?php echo $K2Plugin->fields; ?>
+                                                </div>
                                             </div>
                                         <?php endif; ?>
                                     <?php endforeach; ?>
@@ -492,7 +499,7 @@ $app = Factory::getApplication();
                     <?php endif; ?>
 
                     <?php if ($this->params->get('showVideoTab')): ?>
-                        <!-- Tab video -->
+                        <!-- Tab media -->
                         <div class="k2TabsContent" id="k2TabMedia">
                             <?php if ($this->lists['checkAllVideos']): ?>
                                 <div id="item_video_content">
@@ -501,7 +508,7 @@ $app = Factory::getApplication();
                                             <label><?php echo Text::_('K2_MEDIA_SOURCE'); ?></label>
                                         </div>
                                         <div class="itemAdditionalData">
-                                            <div id="k2MediaTabs" class="k2Tabs">
+                                            <div id="k2MediaTabs" class="k2MediaTabs k2Tabs">
                                                 <ul class="k2TabsNavigation">
                                                     <li><a href="#k2MediaTab1"><?php echo Text::_('K2_UPLOAD'); ?></a>
                                                     </li>
@@ -529,7 +536,7 @@ $app = Factory::getApplication();
                                                         <div class="itemAdditionalBlock">
                                                             <a id="k2MediaBrowseServer" class="k2Button"
                                                                href="index.php?option=com_k2&amp;view=media&amp;type=video&amp;tmpl=component&amp;fieldID=remoteVideo">
-                                                                <?php echo Text::_('K2_BROWSE_VIDEOS_ON_SERVER') ?>
+                                                                <?php echo Text::_('K2_BROWSE_VIDEOS_ON_SERVER'); ?>
                                                             </a>
                                                         </div>
                                                         <div class="itemAdditionalBlock sep">
@@ -564,8 +571,6 @@ $app = Factory::getApplication();
                                                                 </select>
                                                             <?php } ?>
                                                         </div>
-                                                        <br/>
-                                                        <br/>
                                                         <div class="itemAdditionalBlock">
                                                             <label><?php echo Text::_('K2_AND_ENTER_MEDIA_URL_OR_ID'); ?></label>
                                                         </div>
@@ -574,8 +579,8 @@ $app = Factory::getApplication();
                                                                    value="<?php echo $this->lists['providerVideo'] ?>"/>
                                                         </div>
                                                         <div class="k2Right k2DocLink">
-                                                            <a data-k2-modal="iframe"
-                                                               href="https://www.joomlaworks.net/allvideos-documentation">
+                                                            <a target="_blank"
+                                                               href="https://www.joomlaworks.net/support/docs/allvideos">
                                                                 <i class="fa fa-info"></i>
                                                                 <span><?php echo Text::_('K2_READ_THE_ALLVIDEOS_DOCUMENTATION_FOR_MORE'); ?></span>
                                                             </a>
@@ -692,9 +697,11 @@ $app = Factory::getApplication();
                                 <div class="itemPlugins itemPluginsMedia">
                                     <?php foreach ($this->K2PluginsItemVideo as $K2Plugin): ?>
                                         <?php if (!is_null($K2Plugin)): ?>
-                                            <h3><?php echo $K2Plugin->name; ?></h3>
-                                            <div class="itemAdditionalData">
-                                                <?php echo $K2Plugin->fields; ?>
+                                            <div class="itemPlugin k2Plugin-<?php echo preg_replace('/[^\p{L}\p{N}_]/u', '', ucwords(strtolower($K2Plugin->name))); ?>">
+                                                <h3><?php echo $K2Plugin->name; ?></h3>
+                                                <div class="itemAdditionalData">
+                                                    <?php echo $K2Plugin->fields; ?>
+                                                </div>
                                             </div>
                                         <?php endif; ?>
                                     <?php endforeach; ?>
@@ -735,9 +742,11 @@ $app = Factory::getApplication();
                                 <div class="itemPlugins itemPluginsExtraFields">
                                     <?php foreach ($this->K2PluginsItemExtraFields as $K2Plugin): ?>
                                         <?php if (!is_null($K2Plugin)): ?>
-                                            <h3><?php echo $K2Plugin->name; ?></h3>
-                                            <div class="itemAdditionalData">
-                                                <?php echo $K2Plugin->fields; ?>
+                                            <div class="itemPlugin k2Plugin-<?php echo preg_replace('/[^\p{L}\p{N}_]/u', '', ucwords(strtolower($K2Plugin->name))); ?>">
+                                                <h3><?php echo $K2Plugin->name; ?></h3>
+                                                <div class="itemAdditionalData">
+                                                    <?php echo $K2Plugin->fields; ?>
+                                                </div>
                                             </div>
                                         <?php endif; ?>
                                     <?php endforeach; ?>
@@ -774,7 +783,7 @@ $app = Factory::getApplication();
                                                     </a>
                                                     <a class="deleteAttachmentButton"
                                                        title="<?php echo Text::_('K2_DELETE'); ?>"
-                                                       href="<?php echo URI::base(true); ?>/index.php?option=com_k2&amp;view=item&amp;task=deleteAttachment&amp;id=<?php echo $attachment->id ?>&amp;cid=<?php echo $this->row->id; ?>">
+                                                       href="<?php echo URI::base(true); ?>/index.php?option=com_k2&amp;view=item&amp;task=deleteAttachment&amp;id=<?php echo $attachment->id ?>&amp;cid=<?php echo $this->row->id; ?>&amp;<?php echo Session::getFormToken(); ?>=1">
                                                         <i class="fa fa-remove"></i>
                                                         <span class="hidden"><?php echo Text::_('K2_DELETE'); ?></span>
                                                     </a>
@@ -796,9 +805,11 @@ $app = Factory::getApplication();
                                 <div class="itemPlugins itemPluginsAttachments">
                                     <?php foreach ($this->K2PluginsItemAttachments as $K2Plugin): ?>
                                         <?php if (!is_null($K2Plugin)): ?>
-                                            <h3><?php echo $K2Plugin->name; ?></h3>
-                                            <div class="itemAdditionalData">
-                                                <?php echo $K2Plugin->fields; ?>
+                                            <div class="itemPlugin k2Plugin-<?php echo preg_replace('/[^\p{L}\p{N}_]/u', '', ucwords(strtolower($K2Plugin->name))); ?>">
+                                                <h3><?php echo $K2Plugin->name; ?></h3>
+                                                <div class="itemAdditionalData">
+                                                    <?php echo $K2Plugin->fields; ?>
+                                                </div>
                                             </div>
                                         <?php endif; ?>
                                     <?php endforeach; ?>
@@ -813,9 +824,11 @@ $app = Factory::getApplication();
                             <div class="itemPlugins itemPluginsPlugins">
                                 <?php foreach ($this->K2PluginsItemOther as $K2Plugin): ?>
                                     <?php if (!is_null($K2Plugin)): ?>
-                                        <h3><?php echo $K2Plugin->name; ?></h3>
-                                        <div class="itemAdditionalData">
-                                            <?php echo $K2Plugin->fields; ?>
+                                        <div class="itemPlugin k2Plugin-<?php echo preg_replace('/[^\p{L}\p{N}_]/u', '', ucwords(strtolower($K2Plugin->name))); ?>">
+                                            <h3><?php echo $K2Plugin->name; ?></h3>
+                                            <div class="itemAdditionalData">
+                                                <?php echo $K2Plugin->fields; ?>
+                                            </div>
                                         </div>
                                     <?php endif; ?>
                                 <?php endforeach; ?>

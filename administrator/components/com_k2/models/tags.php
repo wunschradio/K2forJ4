@@ -17,7 +17,9 @@ use Joomla\CMS\Language\Text;
 
 jimport('joomla.application.component.model');
 
-Table::addIncludePath(JPATH_COMPONENT . '/tables');
+Table::addIncludePath(JPATH_ADMINISTRATOR . '/components/com_k2/tables');
+
+JLoader::register('K2GlobalHelper', JPATH_SITE . '/media/k2/assets/helpers/global.php');
 
 class K2ModelTags extends K2Model
 {
@@ -36,20 +38,16 @@ class K2ModelTags extends K2Model
         $search = StringHelper::strtolower($search);
         $search = trim(preg_replace('/[^\p{L}\p{N}\s\-_]/u', '', $search));
 
-        $query = "SELECT #__k2_tags.*, (SELECT COUNT(*) FROM #__k2_tags_xref WHERE #__k2_tags_xref.tagID = #__k2_tags.id) AS numOfItems FROM #__k2_tags";
-
-        $conditions = array();
+        $query = "SELECT #__k2_tags.*, (SELECT COUNT(*) FROM #__k2_tags_xref WHERE #__k2_tags_xref.tagID = #__k2_tags.id) AS numOfItems FROM #__k2_tags WHERE 1=1";
 
         if ($filter_state > -1) {
-            $conditions[] = "published={$filter_state}";
-        }
-        if ($search) {
-            $escaped = $db->escape($search, true);
-            $conditions[] = "LOWER( name ) LIKE " . $db->Quote('%' . $escaped . '%', false);
+            $query .= " AND published={$filter_state}";
         }
 
-        if (count($conditions)) {
-            $query .= " WHERE " . implode(' AND ', $conditions);
+        if ($search) {
+            $query .= K2GlobalHelper::search($search, array(
+                'name',
+            ));
         }
 
         if (!$filter_order) {
@@ -71,10 +69,10 @@ class K2ModelTags extends K2Model
         $db = Factory::getDbo();
         $limit = $app->getUserStateFromRequest('global.list.limit', 'limit', $app->getCfg('list_limit'), 'int');
         $limitstart = $app->getUserStateFromRequest($option . '.limitstart', 'limitstart', 0, 'int');
+
         $filter_state = $app->getUserStateFromRequest($option . $view . 'filter_state', 'filter_state', 1, 'int');
+
         $search = $app->getUserStateFromRequest($option . $view . 'search', 'search', '', 'string');
-        $search = StringHelper::strtolower($search);
-        $search = trim(preg_replace('/[^\p{L}\p{N}\s\-_]/u', '', $search));
 
         $query = "SELECT COUNT(*) FROM #__k2_tags WHERE id > 0";
 
@@ -83,8 +81,9 @@ class K2ModelTags extends K2Model
         }
 
         if ($search) {
-            $escaped = $db->escape($search, true);
-            $query .= " AND LOWER( name ) LIKE " . $db->Quote('%' . $escaped . '%', false);
+            $query .= K2GlobalHelper::search($search, array(
+                'name',
+            ));
         }
 
         $db->setQuery($query);

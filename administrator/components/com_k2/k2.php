@@ -48,6 +48,12 @@ if (
     throw new \Exception(Text::_('K2_ALERTNOTAUTH'), 403);
 }
 
+// Load K2 Pagination class
+require_once JPATH_ADMINISTRATOR.'/components/com_k2/lib/k2pagination.php';
+
+// Load K2 Global Helper
+JLoader::register('K2GlobalHelper', JPATH_SITE.'/media/k2/assets/helpers/global.php');
+
 $document = Factory::getDocument();
 
 $document->setMetadata('theme-color', '#10223e');
@@ -92,7 +98,7 @@ if (
             <div id="k2Copyrights">
                 <a target="_blank" href="https://getk2.org/">K2 v'.K2_CURRENT_VERSION.K2_BUILD.'</a>
                 <div>
-                    Copyright &copy; 2006-'.date('Y').' <a target="_blank" href="https://www.joomlaworks.net/">JoomlaWorks Ltd.</a>
+                    Copyright &copy; 2006-'.date('Y').'<br /><a target="_blank" href="https://www.joomlaworks.net/">JoomlaWorks Ltd.</a>
                 </div>
             </div>
         </div>

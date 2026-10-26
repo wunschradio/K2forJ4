@@ -223,6 +223,10 @@ class K2ControllerItem extends K2Controller
 
     public function checkin()
     {
+        $user = Factory::getUser();
+        if ($user->guest) {
+            throw new \Exception(Text::_('K2_ALERTNOTAUTH'), 403);
+        }
         $model = $this->getModel('item');
         $model->checkin();
     }

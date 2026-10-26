@@ -61,7 +61,7 @@ class K2HelperUtilities
             } else {
                 $avatarTimestamp = '';
                 $avatarFile = JPATH_SITE . '/media/k2/users/' . $avatar;
-                if (file_exists($avatarFile) && filemtime($avatarFile)) {
+                if (is_file($avatarFile) && filemtime($avatarFile)) {
                     $avatarTimestamp = '?t=' . date("Ymd_Hi", filemtime($avatarFile));
                 }
                 $avatar = URI::root(true) . '/media/k2/users/' . $avatar . $avatarTimestamp;
@@ -77,14 +77,18 @@ class K2HelperUtilities
 
     public static function getCategoryImage($image, $params)
     {
-        jimport('joomla.filesystem.file');
         $app = Factory::getApplication();
         $categoryImage = null;
         if (!empty($image)) {
-            $categoryImage = URI::root(true) . '/media/k2/categories/' . $image;
+            $catImageTimestamp = '';
+            $catImageFile = JPATH_SITE . '/media/k2/categories/' . $image;
+            if (is_file($catImageFile) && filemtime($catImageFile)) {
+                $catImageTimestamp = '?t=' . date("Ymd_Hi", filemtime($catImageFile));
+            }
+            $categoryImage = URI::root(true) . '/media/k2/categories/' . $image . $catImageTimestamp;
         } else {
             if ($params->get('catImageDefault')) {
-                if (File::exists(JPATH_SITE . '/templates/' . $app->getTemplate() . '/images/placeholder/category.png')) {
+                if (is_file(JPATH_SITE . '/templates/' . $app->getTemplate() . '/images/placeholder/category.png')) {
                     $categoryImage = URI::root(true) . '/templates/' . $app->getTemplate() . '/images/placeholder/category.png';
                 } else {
                     $categoryImage = URI::root(true) . '/components/com_k2/images/placeholder/category.png';
@@ -140,6 +144,7 @@ class K2HelperUtilities
     // Cleanup HTML entities
     public static function cleanHtml($text)
     {
+        $text = trim(preg_replace('/\s+/u', ' ', (string) $text));
         return htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
     }
 
@@ -294,7 +299,7 @@ class K2HelperUtilities
         $params = ComponentHelper::getParams('com_k2');
         $vars = array();
         $vars['secret'] = $params->get('recaptcha_private_key');
-        $vars['response'] = $_POST['g-recaptcha-response'];
+        $vars['response'] = Factory::getApplication()->input->post->getString('g-recaptcha-response', '');
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, 'https://www.google.com/recaptcha/api/siteverify');
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);

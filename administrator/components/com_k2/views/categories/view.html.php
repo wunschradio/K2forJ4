@@ -17,10 +17,11 @@ use Joomla\CMS\Component\ComponentHelper;
 use Joomla\CMS\Language\Text;
 use Joomla\CMS\Language\LanguageHelper;
 use Joomla\CMS\HTML\HTMLHelper;
-use Joomla\CMS\Pagination\Pagination;
 use Joomla\CMS\Toolbar\Toolbar;
 
 jimport('joomla.application.component.view');
+
+JLoader::register('K2Pagination', JPATH_ADMINISTRATOR . '/components/com_k2/lib/k2pagination.php');
 
 class K2ViewCategories extends K2View
 {
@@ -48,17 +49,18 @@ class K2ViewCategories extends K2View
         $language = $app->getUserStateFromRequest($option . $view . 'language', 'language', '', 'string');
         $search = $app->getUserStateFromRequest($option . $view . 'search', 'search', '', 'string');
         $search = StringHelper::strtolower($search);
-        $search = trim(preg_replace('/[^\p{L}\p{N}\s\"\-_]/u', '', $search));
+        $search = StringHelper::trim(preg_replace('/[^\p{L}\p{N}\s\-.,:!?\'"()]/u', '', $search));
+
+        // getData() also computes the total, so it must run first
         $model = $this->getModel();
+        $categories = $model->getData();
         $total = $model->getTotal();
+
         $task = Factory::getApplication()->input->getCmd('task');
         if ($limitstart > $total - $limit) {
             $limitstart = max(0, (int)(ceil($total / $limit) - 1) * $limit);
             Factory::getApplication()->input->set('limitstart', $limitstart);
         }
-
-        $categories = $model->getData();
-        $categoryModel = K2Model::getInstance('Category', 'K2Model');
 
         // JS
         $document->addScriptDeclaration("
@@ -84,6 +86,7 @@ class K2ViewCategories extends K2View
             $langsMapping[$lang->lang_code] = $lang->title;
         }
 
+        $categoryModel = K2Model::getInstance('Category', 'K2Model');
         for ($i = 0; $i < count($categories); $i++) {
             $categories[$i]->status = HTMLHelper::_('jgrid.published', $categories[$i]->published, $i, '', $filter_trash == 0 && $context != 'modalselector');
             if ($params->get('showItemsCounterAdmin')) {
@@ -111,8 +114,7 @@ class K2ViewCategories extends K2View
             $app->enqueueMessage(Text::_('K2_ALL_TRASHED_ITEMS_IN_A_CATEGORY_MUST_BE_DELETED_FIRST'));
         }
 
-        jimport('joomla.html.pagination');
-        $pageNav = new Pagination($total, $limitstart, $limit);
+        $pageNav = new K2Pagination($total, $limitstart, $limit);
         $this->page = $pageNav;
 
         $lists = array();

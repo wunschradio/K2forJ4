@@ -97,7 +97,7 @@ $context = Factory::getApplication()->input->getCmd('context');
                                     ?>
                                     <a class="k2ListItemDisabled"
                                        title="<?php echo Text::_('K2_CLICK_TO_ADD_THIS_ENTRY'); ?>" href="#"
-                                       onclick="<?php echo $onClick; ?>"><?php echo $row->name; ?></a>
+                                       onclick="<?php echo $onClick; ?>" data-id="<?php echo $row->id; ?>"><?php echo $row->name; ?></a>
                                 <?php else: ?>
                                     <a href="<?php echo Route::_('index.php?option=com_k2&view=tag&cid=' . $row->id); ?>"><?php echo $row->name; ?></a>
                                 <?php endif; ?>

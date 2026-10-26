@@ -24,7 +24,7 @@ $user = Factory::getUser();
      class="userView<?php if ($this->params->get('pageclass_sfx')) echo ' ' . $this->params->get('pageclass_sfx'); ?>">
     <?php if ($this->params->get('show_page_title') && $this->params->get('page_title') != $this->user->name): ?>
         <!-- Page title -->
-        <div class="componentheading<?php echo $this->params->get('pageclass_sfx') ?>">
+        <div class="componentheading<?php echo $this->params->get('pageclass_sfx'); ?>">
             <?php echo $this->escape($this->params->get('page_title')); ?>
         </div>
     <?php endif; ?>
@@ -51,7 +51,7 @@ $user = Factory::getUser();
             <?php endif; ?>
 
             <?php if ($this->params->get('userImage') && !empty($this->user->avatar)): ?>
-                <img src="<?php echo $this->user->avatar; ?>"
+                <img src="<?php echo htmlspecialchars($this->user->avatar, ENT_QUOTES, 'UTF-8'); ?>"
                      alt="<?php echo htmlspecialchars($this->user->name, ENT_QUOTES, 'UTF-8'); ?>"
                      style="width:<?php echo $this->params->get('userImageWidth'); ?>px; height:auto;"/>
             <?php endif; ?>

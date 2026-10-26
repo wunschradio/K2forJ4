@@ -45,45 +45,30 @@ class K2ModelItemlist extends K2Model
             $params->set('googleSearch', 0);
         }
 
-        // For Falang
-        $falang_driver = PluginHelper::getPlugin('system', 'falangdriver');
-
         $jnow = Factory::getDate();
         $now = $jnow->toSql();
 
         $nullDate = $db->getNullDate();
 
-        $query = "/* Frontend / K2 / Items */ SELECT SQL_CALC_FOUND_ROWS i.*,";
+        // --- Query containing initial SELECT ---
+        $queryStart = "/* Frontend / K2 / Items */ SELECT i.*,";
 
         if ($ordering == 'modified') {
-            $query .= " CASE WHEN i.modified = 0 THEN i.created ELSE i.modified END AS lastChanged,";
+            $queryStart .= " CASE WHEN i.modified = 0 THEN i.created ELSE i.modified END AS lastChanged,";
         }
 
-        $query .= " c.name AS categoryname, c.id AS categoryid, c.alias AS categoryalias, c.params AS categoryparams";
+        $queryStart .= " c.name AS categoryname, c.id AS categoryid, c.alias AS categoryalias, c.params AS categoryparams";
 
         if ($ordering == 'best') {
-            $query .= ", (r.rating_sum/r.rating_count) AS rating";
+            $queryStart .= ", (r.rating_sum/r.rating_count) AS rating";
         }
 
-        $query .= " FROM #__k2_items AS i";
-
-        // Enforce certain INDEX when filtering by dates
-        if ($ordering == 'date' || $ordering == 'rdate') {
-            $query .= " USE INDEX (idx_item)";
-        }
-
-        $query .= " INNER JOIN #__k2_categories AS c ON c.id = i.catid";
+        // --- Query containing FROM to WHERE ---
+        $query = " FROM #__k2_items AS i INNER JOIN #__k2_categories AS c ON c.id = i.catid";
 
         if ($ordering == 'best') {
             $query .= " LEFT JOIN #__k2_rating AS r ON r.itemID = i.id";
         }
-
-        /*
-        // Changed the query for the tag case for better performance
-        if ($task == 'tag') {
-            $query .= " LEFT JOIN #__k2_tags_xref AS tags_xref ON tags_xref.itemID = i.id LEFT JOIN #__k2_tags AS tags ON tags.id = tags_xref.tagID";
-        }
-        */
 
         if ($task == 'user' && !$user->guest && $user->id == Factory::getApplication()->input->getInt('id')) {
             $query .= " WHERE";
@@ -104,9 +89,6 @@ class K2ModelItemlist extends K2Model
         if (!($task == 'user' && !$user->guest && $user->id == Factory::getApplication()->input->getInt('id'))) {
             $query .= " AND (i.publish_up = " . $db->Quote($nullDate) . " OR i.publish_up <= " . $db->Quote($now) . ")";
             $query .= " AND (i.publish_down = " . $db->Quote($nullDate) . " OR i.publish_down >= " . $db->Quote($now) . ")";
-            /*
-            $query .= " AND (i.publish_up IS NULL OR i.publish_up <= NOW()) AND (i.publish_down IS NULL OR i.publish_down >= NOW())";
-            */
         }
 
         // Build query depending on task
@@ -129,7 +111,7 @@ class K2ModelItemlist extends K2Model
                 } else {
                     $categories = $this->getCategoryTree($id);
                     sort($categories);
-                    $sql = @implode(',', $categories);
+                    $sql = (is_array($categories) && count($categories)) ? implode(',', $categories) : '0';
                     $query .= " AND c.id IN({$sql})";
                 }
 
@@ -151,18 +133,18 @@ class K2ModelItemlist extends K2Model
                 break;
 
             case 'search':
-                $badchars = array(
+                $badchars = [
                     '#',
                     '>',
                     '<',
-                    '\\'
-                );
+                    '\\',
+                ];
                 $search = StringHelper::trim(StringHelper::str_ireplace($badchars, '', Factory::getApplication()->input->getString('searchword', null)));
                 $sql = $this->prepareSearch($search);
                 if (!empty($sql)) {
                     $query .= $sql;
                 } else {
-                    $rows = array();
+                    $rows = [];
                     return $rows;
                 }
                 break;
@@ -211,14 +193,6 @@ class K2ModelItemlist extends K2Model
 
                 $query .= " AND i.id IN(SELECT itemID FROM #__k2_tags_xref WHERE tagID=" . (int)$result . ")";
 
-                /*
-                if (isset($result) && $result > 0) {
-                    $query .= " AND (tags.id) = {$result}";
-                } else {
-                    $query .= " AND (tags.name) = ".$db->Quote($tag);
-                }
-                */
-
                 $categories = $params->get('categoriesFilter', null);
                 if (is_array($categories)) {
                     sort($categories);
@@ -233,14 +207,15 @@ class K2ModelItemlist extends K2Model
                 $searchIDs = $params->get('categories');
                 if (is_array($searchIDs) && count($searchIDs)) {
                     if ($params->get('catCatalogMode')) {
+                        $searchIDs = ArrayHelper::toInteger($searchIDs);
                         sort($searchIDs);
-                        $sql = @implode(',', $searchIDs);
+                        $sql = implode(',', $searchIDs);
                         $query .= " AND c.id IN({$sql})";
                     } else {
                         $result = $this->getCategoryTree($searchIDs);
-                        if (count($result)) {
+                        if (is_array($result) && count($result)) {
                             sort($result);
-                            $sql = @implode(',', $result);
+                            $sql = implode(',', $result);
                             $query .= " AND c.id IN({$sql})";
                         }
                     }
@@ -255,6 +230,13 @@ class K2ModelItemlist extends K2Model
             } elseif (Factory::getApplication()->input->getInt('featured') == '2') {
                 $query .= " AND i.featured = 1";
             }
+        }
+
+        // --- Query containing GROUP BY and ORDER BY ---
+        $queryEnd = '';
+
+        if ($task == 'tag') {
+            $queryEnd .= ' GROUP BY i.id';
         }
 
         // Set ordering
@@ -321,11 +303,10 @@ class K2ModelItemlist extends K2Model
                 break;
         }
 
-        if ($task == 'tag') {
-            $query .= ' GROUP BY i.id';
-        }
+        $queryEnd .= ' ORDER BY ' . $orderby;
 
-        $query .= ' ORDER BY ' . $orderby;
+        // --- Final query ---
+        $combinedQuery = $queryStart . $query . $queryEnd;
 
         PluginHelper::importPlugin('k2');
         /* since J4 compatibility */
@@ -334,22 +315,19 @@ class K2ModelItemlist extends K2Model
                 $dispatcher = JDispatcher::getInstance();
         */
         /* since J4 compatibility */
-        Factory::getApplication()->triggerEvent('onK2BeforeSetQuery', array(&$query));
+        Factory::getApplication()->triggerEvent('onK2BeforeSetQuery', array(&$combinedQuery));
 
-        $db->setQuery($query, $limitstart, $limit);
+        $db->setQuery($combinedQuery, $limitstart, $limit);
         $rows = $db->loadObjectList();
 
+        // --- Row counter ---
         if (count($rows)) {
-            // For Falang
-            if (!empty($falang_driver)) {
-                $db->setQuery($query, $limitstart, $limit);
-                $db->loadResult(false);
-                $db->setQuery('SELECT FOUND_ROWS();');
-                $this->getTotal = $db->loadResult(false);
-                return $rows;
+            if ($task == 'tag') {
+                $countQuery = "/* Frontend / K2 / Items Count */ SELECT COUNT(DISTINCT i.id)" . $query;
+            } else {
+                $countQuery = "/* Frontend / K2 / Items Count */ SELECT COUNT(*)" . $query;
             }
-
-            $db->setQuery('SELECT FOUND_ROWS();');
+            $db->setQuery($countQuery);
             $this->getTotal = $db->loadResult();
         }
 
@@ -370,12 +348,12 @@ class K2ModelItemlist extends K2Model
         if (!is_array($categories)) {
             $categories = (array)$categories;
         }
-        ArrayHelper::toInteger($categories);
+        $categories = ArrayHelper::toInteger($categories);
         $categories = array_unique($categories);
         sort($categories);
         $key = implode('|', $categories);
         $clientID = $app->getClientId();
-        static $K2CategoryTreeInstances = array();
+        static $K2CategoryTreeInstances = [];
         if (isset($K2CategoryTreeInstances[$clientID]) && array_key_exists($key, $K2CategoryTreeInstances[$clientID])) {
             return $K2CategoryTreeInstances[$clientID][$key];
         }
@@ -396,7 +374,7 @@ class K2ModelItemlist extends K2Model
             $array = $db->loadColumn();
             $categories = array_merge($categories, $array);
         }
-        ArrayHelper::toInteger($categories);
+        $categories = ArrayHelper::toInteger($categories);
         $categories = array_unique($categories);
         $K2CategoryTreeInstances[$clientID][$key] = $categories;
         return $categories;
@@ -547,8 +525,7 @@ class K2ModelItemlist extends K2Model
             $imageTimestamp = '';
             $dateModified = ((int)$item->modified) ? $item->modified : '';
             if ($params->get('imageTimestamp', 1) && $dateModified) {
-	            $dateTimeObj = new DateTime($dateModified);
-	            $imageTimestamp = '?t=' . IntlDateFormatter::formatObject($dateTimeObj,'YMMdd_hhmmss');
+                $imageTimestamp = '?t=' . date('Ymd_His', strtotime($dateModified));
             }
 
             $imageFilenamePrefix = md5("Image" . $item->id);
@@ -580,7 +557,7 @@ class K2ModelItemlist extends K2Model
         foreach ($tags as $tag) {
             $tagIDs[] = $tag->id;
         }
-        ArrayHelper::toInteger($tagIDs);
+        $tagIDs = ArrayHelper::toInteger($tagIDs);
         sort($tagIDs);
         $sql = implode(',', $tagIDs);
 
@@ -647,81 +624,38 @@ class K2ModelItemlist extends K2Model
 
     public function prepareSearch($search)
     {
-        jimport('joomla.filesystem.file');
         $db = Factory::getDbo();
-        $language = Factory::getLanguage();
-        $defaultLang = $language->getDefault();
-        $currentLang = $language->getTag();
-
-        $search = trim($search);
-        $length = StringHelper::strlen($search);
 
         $sql = '';
 
-        if (Factory::getApplication()->input->getVar('categories')) {
-            $categories = @explode(',', Factory::getApplication()->input->getVar('categories'));
-            ArrayHelper::toInteger($categories);
-            sort($categories);
-            $sql .= " AND c.id IN(" . @implode(',', $categories) . ")";
+        $input = Factory::getApplication()->input;
+        if ($input->getString('categories')) {
+            $categories = explode(',', $input->getString('categories'));
+            $categories = array_filter(ArrayHelper::toInteger($categories));
+            if (count($categories)) {
+                sort($categories);
+                $sql .= " AND c.id IN(" . implode(',', $categories) . ")";
+            }
         }
 
+        $search = trim((string) $search);
         if (empty($search)) {
             return $sql;
         }
 
-        if (StringHelper::substr($search, 0, 1) == '"' && StringHelper::substr($search, $length - 1, 1) == '"') {
-            $type = 'exact';
-        } else {
-            $type = 'any';
-        }
-
-        if ($type == 'exact') {
-            $search = StringHelper::trim($search, '"');
-
-            $escaped = $db->escape($search, true);
-            $quoted = $db->Quote('%' . $escaped . '%', false);
-
-            $sql .= " AND (
-                    LOWER(i.title) LIKE " . $quoted . " OR
-                    LOWER(i.introtext) LIKE " . $quoted . " OR
-                    LOWER(i.`fulltext`) LIKE " . $quoted . " OR
-                    LOWER(i.extra_fields_search) LIKE " . $quoted . " OR
-                    LOWER(i.image_caption) LIKE " . $quoted . " OR
-                    LOWER(i.image_credits) LIKE " . $quoted . " OR
-                    LOWER(i.video_caption) LIKE " . $quoted . " OR
-                    LOWER(i.video_credits) LIKE " . $quoted . " OR
-                    LOWER(i.metadesc) LIKE " . $quoted . " OR
-                    LOWER(i.metakey) LIKE " . $quoted . "
-                )";
-        } else {
-            $search = strtolower(trim(preg_replace('/[^\p{L}\p{N}\s\-_]/u', '', $search)));
-
-            $searchwords = explode(' ', $search);
-            if (count($searchwords)) {
-            } else {
-                $searchwords = [$search];
-            }
-
-            foreach ($searchwords as $searchword) {
-                if (strlen($searchword) > 2) {
-                    $escaped = $db->escape($searchword, true);
-                    $quoted = $db->Quote('%' . $escaped . '%', false);
-
-                    $sql .= " AND (
-                            LOWER(i.title) LIKE " . $quoted . " OR
-                            LOWER(i.introtext) LIKE " . $quoted . " OR
-                            LOWER(i.`fulltext`) LIKE " . $quoted . " OR
-                            LOWER(i.extra_fields_search) LIKE " . $quoted . " OR
-                            LOWER(i.image_caption) LIKE " . $quoted . " OR
-                            LOWER(i.image_credits) LIKE " . $quoted . " OR
-                            LOWER(i.video_caption) LIKE " . $quoted . " OR
-                            LOWER(i.video_credits) LIKE " . $quoted . " OR
-                            LOWER(i.metadesc) LIKE " . $quoted . " OR
-                            LOWER(i.metakey) LIKE " . $quoted . "
-                        )";
-                }
-            }
-        }
+        $sql .= K2GlobalHelper::search($search, [
+            'i.title',
+            'i.alias',
+            'i.introtext',
+            'i.`fulltext`',
+            'i.extra_fields_search',
+            'i.image_caption',
+            'i.image_credits',
+            'i.video_caption',
+            'i.video_credits',
+            'i.metadesc',
+            'i.metakey',
+        ]);
 
         return $sql;
     }
@@ -740,7 +674,7 @@ class K2ModelItemlist extends K2Model
             switch ($module->module) {
 
                 case 'mod_k2_content':
-                    require_once(JPATH_SITE . '/modules/mod_k2_content/helper.php');
+                    require_once JPATH_SITE . '/modules/mod_k2_content/helper.php';
                     $helper = new modK2ContentHelper;
                     $items = $helper->getItems($params, $format);
                     break;
@@ -750,7 +684,7 @@ class K2ModelItemlist extends K2Model
                         throw new \Exception(Text::_('K2_NOT_FOUND'), 404);
                     }
 
-                    require_once(JPATH_SITE . '/modules/mod_k2_comments/helper.php');
+                    require_once JPATH_SITE . '/modules/mod_k2_comments/helper.php';
                     $helper = new modK2CommentsHelper;
                     $items = $helper->getLatestComments($params);
 

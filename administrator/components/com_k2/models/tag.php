@@ -14,10 +14,11 @@ use Joomla\CMS\Table\Table;
 use Joomla\CMS\Factory;
 use Joomla\CMS\Language\Text;
 use Joomla\CMS\Component\ComponentHelper;
+use Joomla\CMS\Plugin\PluginHelper;
 
 jimport('joomla.application.component.model');
 
-Table::addIncludePath(JPATH_COMPONENT . '/tables');
+Table::addIncludePath(JPATH_ADMINISTRATOR . '/components/com_k2/tables');
 
 class K2ModelTag extends K2Model
 {
@@ -34,10 +35,18 @@ class K2ModelTag extends K2Model
         $app = Factory::getApplication();
         $row = Table::getInstance('K2Tag', 'Table');
 
+        // Plugin Events
+        PluginHelper::importPlugin('k2');
+
         if (!$row->bind(Factory::getApplication()->input->getArray($_POST))) {
             $app->enqueueMessage($row->getError(), 'error');
             $app->redirect('index.php?option=com_k2&view=tags');
         }
+
+        $isNew = ($row->id) ? false : true;
+
+        // Trigger K2 plugins
+        $app->triggerEvent('onBeforeK2Save', array(&$row, $isNew));
 
         if (!$row->check()) {
             $app->enqueueMessage($row->getError(), 'error');
@@ -51,6 +60,9 @@ class K2ModelTag extends K2Model
 
         parent::cleanCache('com_k2');
         parent::cleanCache('com_k2_extended');
+
+        // Trigger K2 plugins
+        $app->triggerEvent('onAfterK2Save', array(&$row, $isNew));
 
         switch (Factory::getApplication()->input->getCmd('task')) {
             case 'apply':
@@ -127,7 +139,7 @@ class K2ModelTag extends K2Model
         $db = Factory::getDbo();
         $word = Factory::getApplication()->input->getString('q', null);
         $id = Factory::getApplication()->input->getInt('id');
-        $word = $db->Quote($db->escape($word, true) . '%', false);
+        $word = $db->Quote('%' . $db->escape($word, true) . '%', false);
 
         if ($id) {
             $query = "SELECT id,name FROM #__k2_tags WHERE name LIKE " . $word;

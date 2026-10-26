@@ -19,11 +19,13 @@ use Joomla\CMS\Component\ComponentHelper;
 use Joomla\CMS\Router\Route;
 use Joomla\CMS\Language\Text;
 use Joomla\CMS\HTML\HTMLHelper;
-use Joomla\CMS\Pagination\Pagination;
+use Joomla\CMS\Session\Session;
 use Joomla\CMS\Table\Table;
 use Joomla\CMS\Toolbar\Toolbar;
 
 jimport('joomla.application.component.view');
+
+JLoader::register('K2Pagination', JPATH_ADMINISTRATOR . '/components/com_k2/lib/k2pagination.php');
 
 class K2ViewUsers extends K2View
 {
@@ -50,9 +52,10 @@ class K2ViewUsers extends K2View
         $filter_status = $app->getUserStateFromRequest($option . $view . 'filter_status', 'filter_status', -1, 'int');
         $filter_group = $app->getUserStateFromRequest($option . $view . 'filter_group', 'filter_group', '', 'string');
         $filter_group_k2 = $app->getUserStateFromRequest($option . $view . 'filter_group_k2', 'filter_group_k2', '', 'string');
+
         $search = $app->getUserStateFromRequest($option . $view . 'search', 'search', '', 'string');
         $search = StringHelper::strtolower($search);
-        $search = trim(preg_replace('/[^\p{L}\p{N}\s\-_]/u', '', $search));
+        $search = StringHelper::trim(preg_replace('/[^\p{L}\p{N}\s\-.,:!?\'"()]/u', '', $search));
 
         K2Model::addIncludePath(JPATH_COMPONENT_ADMINISTRATOR . '/models');
         $model = K2Model::getInstance('Users', 'K2Model');
@@ -88,8 +91,7 @@ class K2ViewUsers extends K2View
 
         $this->rows = $users;
 
-        jimport('joomla.html.pagination');
-        $pageNav = new Pagination($total, $limitstart, $limit);
+        $pageNav = new K2Pagination($total, $limitstart, $limit);
         $this->page = $pageNav;
 
         $lists = array();
@@ -167,7 +169,7 @@ class K2ViewUsers extends K2View
         $app = Factory::getApplication();
 
         $cid = Factory::getApplication()->input->getVar('cid');
-        ArrayHelper::toInteger($cid);
+        $cid = ArrayHelper::toInteger($cid);
         Table::addIncludePath(JPATH_COMPONENT . '/tables');
 
         foreach ($cid as $id) {
@@ -227,7 +229,7 @@ class K2ViewUsers extends K2View
             if ($user->authorise('core.admin', 'com_k2')) {
                 $toolbar->preferences('com_k2', 'K2_SETTINGS');
                 if (!$this->params->get('hideImportButton')) {
-                    $buttonUrl = URI::base() . 'index.php?option=com_k2&amp;view=users&amp;task=import';
+                    $buttonUrl = URI::base() . 'index.php?option=com_k2&amp;view=users&amp;task=import&amp;' . Session::getFormToken() . '=1';
                     $buttonText = Text::_('K2_IMPORT_JOOMLA_USERS');
                     $button = '<joomla-toolbar-button id="toolbar-import-content"><a id="K2ImportUsersButton" class="btn btn-small" href="' . $buttonUrl . '"><i class="icon-archive"></i>' . $buttonText . '</a></joomla-toolbar-button>';
                     $toolbar->customButton('Import')->html($button);
@@ -244,7 +246,7 @@ class K2ViewUsers extends K2View
             if ($user->authorise('core.admin', 'com_k2')) {
                 ToolBarHelper::preferences('com_k2', '(window.innerHeight) * 0.9', '(window.innerWidth) * 0.7', 'K2_SETTINGS');
                 if (!$this->params->get('hideImportButton')) {
-                    $buttonUrl = URI::base() . 'index.php?option=com_k2&amp;view=users&amp;task=import';
+                    $buttonUrl = URI::base() . 'index.php?option=com_k2&amp;view=users&amp;task=import&amp;' . Session::getFormToken() . '=1';
                     $buttonText = Text::_('K2_IMPORT_JOOMLA_USERS');
                     $button = '<joomla-toolbar-button id="toolbar-import-content"><a id="K2ImportUsersButton" class="btn btn-small" href="' . $buttonUrl . '"><i class="icon-archive"></i>' . $buttonText . '</a></joomla-toolbar-button>';
                     $toolbar->appendButton('Custom', $button);
