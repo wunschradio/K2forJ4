@@ -538,46 +538,71 @@ class K2ModelItem extends K2Model
                         throw new \RuntimeException($handle->error);
                     }
 
-                    if (Folder::exists($savepath . '/' . $row->id)) {
-                        Folder::delete($savepath . '/' . $row->id);
-                    }
+                    // Das Archiv ergänzt die Galerie (vorhandene Bilder bleiben). Entpackt wird in einen eigenen
+                    // Ordner; übernommen werden nur echte JPG/PNG/GIF-Bilder, auch aus Unterordnern, samt
+                    // gleichnamiger .txt-Beschriftung. Dateinamen wie in com_k2_galleries (galleries.php).
+                    $imageDir   = $savepath . '/' . $row->id;
+                    $extractDir = $savepath . '/_tmp/zip-' . bin2hex(random_bytes(6));
 
-                    if (!Folder::create($savepath . '/' . $row->id)) {
+                    if (!is_dir($imageDir) && !mkdir($imageDir, 0755, true)) {
                         throw new \RuntimeException(Text::_('K2_GALLERY_UPLOAD_ERROR_CANNOT_EXTRACT_ARCHIVE'));
                     }
 
                     $zipPath = $savepath . '/' . $handle->file_dst_name;
                     $zip = new ZipArchive();
-                    if ($zip->open($zipPath) === true) {
-                        $zip->extractTo($savepath . '/' . $row->id);
+                    if (mkdir($extractDir, 0755, true) && $zip->open($zipPath) === true) {
+                        $zip->extractTo($extractDir);
                         $zip->close();
 
-                        // Dateien umbenennen (Leerzeichen -> _ und File::makeSafe), alles außer Bildern/Captions löschen
-                        $imageDir = $savepath . '/' . $row->id;
-                        $allowedExts = ['avif', 'gif', 'jpg', 'jpeg', 'png', 'webp', 'txt'];
-                        $galleryDir = opendir($imageDir);
-                        while (($filename = readdir($galleryDir)) !== false) {
-                            if ($filename !== "." && $filename !== "..") {
-                                if (is_dir($imageDir . '/' . $filename)) {
-                                    // Unterordner aus dem Archiv werden von der Galerie nicht genutzt
-                                    Folder::delete($imageDir . '/' . $filename);
-                                    continue;
-                                }
-                                $ext = strtolower(File::getExt($filename));
-                                if (in_array($ext, $allowedExts)) {
-                                    $file = str_replace(" ", "_", $filename);
-                                    $safefilename = File::makeSafe($file);
-                                    rename($imageDir . '/' . $filename, $imageDir . '/' . $safefilename);
-                                } else {
-                                    // Delete any non-gallery file extracted from the archive (prevents RCE via shell.php etc.)
-                                    File::delete($imageDir . '/' . $filename);
-                                }
-                            }
-                        }
-                        closedir($galleryDir);
+                        $imageTypes = [IMAGETYPE_JPEG => 'jpg', IMAGETYPE_PNG => 'png', IMAGETYPE_GIF => 'gif'];
+                        $added      = 0;
+                        $zipEntries = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($extractDir, \FilesystemIterator::SKIP_DOTS));
 
-                        $row->gallery = '{gallery}' . $row->id . '{/gallery}';
+                        foreach ($zipEntries as $entry) {
+                            // macOS legt Begleitdateien in __MACOSX und ._-Dateien ab
+                            if (!$entry->isFile() || strpos($entry->getPathname(), '__MACOSX') !== false || strpos($entry->getFilename(), '._') === 0) {
+                                continue;
+                            }
+
+                            $info = @getimagesize($entry->getPathname());
+
+                            if (!$info || !isset($imageTypes[$info[2]])) {
+                                continue;
+                            }
+
+                            $base = mb_strtolower(pathinfo($entry->getFilename(), PATHINFO_FILENAME));
+                            $base = trim(preg_replace('/[^a-z0-9]+/', '-', strtr($base, ['ä' => 'ae', 'ö' => 'oe', 'ü' => 'ue', 'ß' => 'ss'])), '-') ?: 'bild';
+                            $base = substr($base, 0, 80);
+                            $name = $base . '.' . $imageTypes[$info[2]];
+
+                            for ($n = 2; file_exists($imageDir . '/' . $name); $n++) {
+                                $name = $base . '-' . $n . '.' . $imageTypes[$info[2]];
+                            }
+
+                            rename($entry->getPathname(), $imageDir . '/' . $name);
+
+                            $caption = $entry->getPath() . '/' . pathinfo($entry->getFilename(), PATHINFO_FILENAME) . '.txt';
+
+                            if (is_file($caption)) {
+                                rename($caption, $imageDir . '/' . pathinfo($name, PATHINFO_FILENAME) . '.txt');
+                            }
+
+                            $added++;
+                        }
+
+                        Folder::delete($extractDir);
+
+                        if ($added) {
+                            $row->gallery = '{gallery}' . $row->id . '{/gallery}';
+                            $app->enqueueMessage(Text::sprintf('K2_GALLERY_ZIP_ADDED', $added), 'message');
+                        } else {
+                            $app->enqueueMessage(Text::_('K2_GALLERY_ZIP_NO_IMAGES'), 'warning');
+                        }
                     } else {
+                        if (is_dir($extractDir)) {
+                            Folder::delete($extractDir);
+                        }
+
                         if (File::exists($zipPath)) {
                             File::delete($zipPath);
                         }
