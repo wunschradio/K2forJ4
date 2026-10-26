@@ -417,9 +417,18 @@ $app = Factory::getApplication();
                                             <?php endif; ?>
                                             <?php // Modal-Skript selbst laden: bei neuen Beiträgen bindet es sonst niemand ein ?>
                                             <?php HTMLHelper::_('bootstrap.modal'); ?>
-                                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#k2GalleryModal">
-                                                <?php echo Text::_('K2_COM_BE_ITEM_SIGPRO_UPLOAD'); ?>
+                                            <button type="button" class="btn btn-primary" id="k2GalleryButton" data-bs-toggle="modal" data-bs-target="#k2GalleryModal"
+                                                    data-create="<?php echo Text::_('K2_GALLERY_CREATE', true); ?>" data-open="<?php echo Text::_('K2_GALLERY_OPEN', true); ?>">
+                                                <?php echo Text::_(empty($this->row->gallery) ? 'K2_GALLERY_CREATE' : 'K2_GALLERY_OPEN'); ?>
                                             </button>
+                                            <script>
+                                                // Das Galerie-Fenster meldet die Anzahl der Bilder; der Knopf zeigt danach "erstellen" bzw. "bearbeiten"
+                                                window.addEventListener('message', (event) => {
+                                                    const button = document.getElementById('k2GalleryButton');
+                                                    if (event.origin !== window.location.origin || !button || !event.data || typeof event.data.k2gallery !== 'number') return;
+                                                    button.textContent = event.data.k2gallery > 0 ? button.dataset.open : button.dataset.create;
+                                                });
+                                            </script>
 
                                             <div class="modal fade" id="k2GalleryModal" tabindex="-1" aria-labelledby="k2GalleryModalLabel" aria-hidden="true">
                                                 <div class="modal-dialog modal-xl" style="max-width: 90vw;">
@@ -446,14 +455,15 @@ $app = Factory::getApplication();
                                                 <?php
                                                 // Fotografen-Link: Schlüssel aus Galerie-ID und Secret der globalen Konfiguration,
                                                 // gleiche Berechnung in components/com_k2_galleries/tmpl/galleries/galleries.php
-                                                $galleryKey  = substr(hash_hmac('sha256', 'com_k2_galleries:' . (int) $this->row->id, (string) Factory::getApplication()->get('secret')), 0, 32);
-                                                $galleryLink = Uri::root() . 'index.php?option=com_k2_galleries&view=galleries&gallery=' . (int) $this->row->id . '&key=' . $galleryKey;
+                                                $galleryExp  = time() + 86400; // 24 Stunden gültig
+                                                $galleryKey  = substr(hash_hmac('sha256', 'com_k2_galleries:' . (int) $this->row->id . ':' . $galleryExp, (string) Factory::getApplication()->get('secret')), 0, 32);
+                                                $galleryLink = Uri::root() . 'index.php?option=com_k2_galleries&view=galleries&gallery=' . (int) $this->row->id . '&key=' . $galleryKey . '&exp=' . $galleryExp;
                                                 ?>
                                                 <div class="input-group" style="max-width: 50rem;">
                                                     <input type="text" class="form-control" id="k2GalleryShareLink" readonly value="<?php echo htmlspecialchars($galleryLink, ENT_QUOTES, 'UTF-8'); ?>">
                                                     <button type="button" class="btn btn-secondary" onclick="navigator.clipboard.writeText(document.getElementById('k2GalleryShareLink').value).then(() => { this.textContent = '<?php echo Text::_('K2_GALLERY_SHARE_COPIED', true); ?>'; })"><?php echo Text::_('K2_GALLERY_SHARE_COPY'); ?></button>
                                                 </div>
-                                                <div class="small text-muted mt-1"><?php echo Text::_('K2_GALLERY_SHARE_DESC'); ?></div>
+                                                <div class="small text-muted mt-1"><?php echo Text::sprintf('K2_GALLERY_SHARE_DESC', HTMLHelper::_('date', $galleryExp, Text::_('DATE_FORMAT_LC2'))); ?></div>
                                             <?php else : ?>
                                                 <?php echo Text::_('K2_GALLERY_SHARE_SAVE_FIRST'); ?>
                                             <?php endif; ?>
