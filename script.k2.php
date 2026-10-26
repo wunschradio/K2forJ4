@@ -338,7 +338,8 @@ class Com_K2InstallerScript
 			$db->execute();
 		}
 		if (!$itemKeys_idx_items_authors) {
-			$query = "ALTER TABLE #__k2_items ADD INDEX `idx_items_authors` (`created_by`,`created_by_alias`,`published`,`access`,`trash`,`publish_up`,`publish_down`,`id`)";
+			// Alias nur mit 191 Zeichen: ältere MyISAM-Tabellen in utf8mb4 erlauben höchstens 1000 Byte je Index
+			$query = "ALTER TABLE #__k2_items ADD INDEX `idx_items_authors` (`created_by`,`created_by_alias`(191),`published`,`access`,`trash`,`publish_up`,`publish_down`,`id`)";
 			$db->setQuery($query);
 			$db->execute();
 		}
