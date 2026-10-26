@@ -18,10 +18,11 @@ use Joomla\CMS\Component\ComponentHelper;
 use Joomla\CMS\Plugin\PluginHelper;
 use Joomla\CMS\Language\Text;
 use Joomla\CMS\Filter\InputFilter;
-use Joomla\CMS\Filesystem\File;
-use Joomla\CMS\Filesystem\Path;
+require_once JPATH_ADMINISTRATOR . '/components/com_k2/lib/k2filesystem.php';
+use K2File as File;
+use K2Path as Path;
 use Joomla\Registry\Registry;
-use Joomla\CMS\Filesystem\Folder;
+use K2Folder as Folder;
 use Joomla\CMS\Utility\Utility;
 use Joomla\CMS\Router\Route;
 

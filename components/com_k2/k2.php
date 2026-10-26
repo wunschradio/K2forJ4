@@ -10,7 +10,8 @@
 // no direct access
 defined('_JEXEC') or die;
 use Joomla\CMS\Factory;
-use Joomla\CMS\Filesystem\File;
+require_once JPATH_ADMINISTRATOR . '/components/com_k2/lib/k2filesystem.php';
+use K2File as File;
 use Joomla\CMS\Language\Text;
 
 $user = Factory::getUser();

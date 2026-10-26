@@ -18,7 +18,8 @@ use Joomla\CMS\Router\Route;
 use Joomla\CMS\Plugin\PluginHelper;
 use Joomla\CMS\Language\Text;
 use Joomla\Registry\Registry;
-use Joomla\CMS\Filesystem\File;
+require_once JPATH_ADMINISTRATOR . '/components/com_k2/lib/k2filesystem.php';
+use K2File as File;
 use Joomla\CMS\Filter\OutputFilter;
 use Joomla\CMS\Pagination\Pagination;
 use Joomla\CMS\Document\Feed\FeedItem;
@@ -1488,7 +1489,7 @@ class K2ViewItemlist extends K2View
             $this->pagination = $pagination;
             // temp fix #90
             // Joomla is stripping '2' from option value => 'com_k instead of com_k2'
-            $jversion = new JVersion();
+            $jversion = new \Joomla\CMS\Version();
             $version = $jversion->getShortVersion();
             if (version_compare($version, '5.1.3', '>=')) {
             	$this->pagination->setAdditionalUrlParam('option', 'com_k2');

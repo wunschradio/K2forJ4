@@ -16,7 +16,9 @@ use Joomla\CMS\Factory;
 use Joomla\CMS\Language\Text;
 use Joomla\CMS\HTML\HTMLHelper;
 use Joomla\CMS\Version;
-use Joomla\CMS\Filesystem\File;
+use Joomla\CMS\HTML\Helpers\Sidebar;
+require_once JPATH_ADMINISTRATOR . '/components/com_k2/lib/k2filesystem.php';
+use K2File as File;
 
 class K2HelperHTML
 {
@@ -209,20 +211,20 @@ class K2HelperHTML
         $user = Factory::getUser();
         $view = Factory::getApplication()->input->getCmd('view');
 
-        JHtmlSidebar::addEntry(Text::_('K2_ITEMS'), 'index.php?option=com_k2&view=items', $view == 'items');
-        JHtmlSidebar::addEntry(Text::_('K2_CATEGORIES'), 'index.php?option=com_k2&view=categories', $view == 'categories');
+        Sidebar::addEntry(Text::_('K2_ITEMS'), 'index.php?option=com_k2&view=items', $view == 'items');
+        Sidebar::addEntry(Text::_('K2_CATEGORIES'), 'index.php?option=com_k2&view=categories', $view == 'categories');
         if (!$params->get('lockTags') || $user->gid > 23) {
-            JHtmlSidebar::addEntry(Text::_('K2_TAGS'), 'index.php?option=com_k2&view=tags', $view == 'tags');
+            Sidebar::addEntry(Text::_('K2_TAGS'), 'index.php?option=com_k2&view=tags', $view == 'tags');
         }
-        JHtmlSidebar::addEntry(Text::_('K2_COMMENTS'), 'index.php?option=com_k2&view=comments', $view == 'comments');
+        Sidebar::addEntry(Text::_('K2_COMMENTS'), 'index.php?option=com_k2&view=comments', $view == 'comments');
         if ($user->gid > 23) {
-            JHtmlSidebar::addEntry(Text::_('K2_USERS'), 'index.php?option=com_k2&view=users', $view == 'users');
-            JHtmlSidebar::addEntry(Text::_('K2_USER_GROUPS'), 'index.php?option=com_k2&view=usergroups', $view == 'usergroups');
-            JHtmlSidebar::addEntry(Text::_('K2_EXTRA_FIELDS'), 'index.php?option=com_k2&view=extrafields', $view == 'extrafields');
-            JHtmlSidebar::addEntry(Text::_('K2_EXTRA_FIELD_GROUPS'), 'index.php?option=com_k2&view=extrafieldsgroups', $view == 'extrafieldsgroups');
+            Sidebar::addEntry(Text::_('K2_USERS'), 'index.php?option=com_k2&view=users', $view == 'users');
+            Sidebar::addEntry(Text::_('K2_USER_GROUPS'), 'index.php?option=com_k2&view=usergroups', $view == 'usergroups');
+            Sidebar::addEntry(Text::_('K2_EXTRA_FIELDS'), 'index.php?option=com_k2&view=extrafields', $view == 'extrafields');
+            Sidebar::addEntry(Text::_('K2_EXTRA_FIELD_GROUPS'), 'index.php?option=com_k2&view=extrafieldsgroups', $view == 'extrafieldsgroups');
         }
-        JHtmlSidebar::addEntry(Text::_('K2_MEDIA_MANAGER'), 'index.php?option=com_k2&view=media', $view == 'media');
-        JHtmlSidebar::addEntry(Text::_('K2_INFORMATION'), 'index.php?option=com_k2&view=info', $view == 'info');
+        Sidebar::addEntry(Text::_('K2_MEDIA_MANAGER'), 'index.php?option=com_k2&view=media', $view == 'media');
+        Sidebar::addEntry(Text::_('K2_INFORMATION'), 'index.php?option=com_k2&view=info', $view == 'info');
     }
 
     public static function stateToggler(&$row, $key, $property = 'published', $tasks = array('publish', 'unpublish'), $labels = array('K2_PUBLISH', 'K2_UNPUBLISH'))

@@ -17,7 +17,8 @@ use Joomla\CMS\Plugin\PluginHelper;
 use Joomla\CMS\Router\Route;
 use Joomla\CMS\Filter\OutputFilter;
 use Joomla\CMS\Uri\Uri;
-use Joomla\CMS\Filesystem\File;
+require_once JPATH_ADMINISTRATOR . '/components/com_k2/lib/k2filesystem.php';
+use K2File as File;
 
 require_once(JPATH_SITE . '/components/com_k2/helpers/route.php');
 require_once(JPATH_SITE . '/components/com_k2/helpers/utilities.php');

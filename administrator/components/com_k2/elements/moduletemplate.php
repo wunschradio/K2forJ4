@@ -10,7 +10,8 @@
 // no direct access
 defined('_JEXEC') or die;
 
-use Joomla\CMS\Filesystem\Folder;
+require_once JPATH_ADMINISTRATOR . '/components/com_k2/lib/k2filesystem.php';
+use K2Folder as Folder;
 use Joomla\CMS\Factory;
 use Joomla\CMS\HTML\HTMLHelper;
 use Joomla\CMS\Language\Text;

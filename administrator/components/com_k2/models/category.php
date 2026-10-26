@@ -15,8 +15,9 @@ use Joomla\CMS\Factory;
 use Joomla\CMS\Component\ComponentHelper;
 use Joomla\CMS\Plugin\PluginHelper;
 use Joomla\CMS\Filter\InputFilter;
-use Joomla\CMS\Filesystem\Path;
-use Joomla\CMS\Filesystem\File;
+require_once JPATH_ADMINISTRATOR . '/components/com_k2/lib/k2filesystem.php';
+use K2Path as Path;
+use K2File as File;
 use Joomla\CMS\Language\Text;
 
 jimport('joomla.application.component.model');
