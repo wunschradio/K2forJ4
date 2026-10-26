@@ -10,12 +10,12 @@
 // no direct access
 defined('_JEXEC') or die;
 use Joomla\CMS\Factory;
-use Joomla\CMS\Filesystem\File;
+use Joomla\Filesystem\File;
 use Joomla\CMS\Installer\Installer;
 use Joomla\Database\DatabaseInterface;
-use Joomla\CMS\Filesystem\Folder;
+use Joomla\Filesystem\Folder;
 use Joomla\CMS\Component\ComponentHelper;
-use Joomla\CMS\Filesystem\Path;
+use Joomla\Filesystem\Path;
 use Joomla\CMS\Language\Text;
 
 // Installer & un-installer for Joomla 2.5+
@@ -29,7 +29,7 @@ class Com_K2InstallerScript
 
 	public function __construct()
 	{
-		$this->app = JFactory::getApplication();
+		$this->app = Factory::getApplication();
 	}
 
 	/**
@@ -92,7 +92,9 @@ class Com_K2InstallerScript
 				if (File::exists($root.'/modules/'.$name.'/'.$name.'.xml')) {
 					File::delete($root.'/modules/'.$name.'/'.$name.'.xml');
 				}
-				File::move($root.'/modules/'.$name.'/'.$name.'.j25.xml', $root.'/modules/'.$name.'/'.$name.'.xml');
+				if (File::exists($root.'/modules/'.$name.'/'.$name.'.j25.xml')) {
+					File::move($root.'/modules/'.$name.'/'.$name.'.j25.xml', $root.'/modules/'.$name.'/'.$name.'.xml');
+				}
 			}
 
 			$status->modules[] = array('name' => $name, 'client' => $client, 'result' => $result);
@@ -129,7 +131,9 @@ class Com_K2InstallerScript
 				if (File::exists(JPATH_SITE.'/plugins/'.$group.'/'.$name.'/'.$name.'.xml')) {
 					File::delete(JPATH_SITE.'/plugins/'.$group.'/'.$name.'/'.$name.'.xml');
 				}
-				File::move(JPATH_SITE.'/plugins/'.$group.'/'.$name.'/'.$name.'.j25.xml', JPATH_SITE.'/plugins/'.$group.'/'.$name.'/'.$name.'.xml');
+				if (File::exists(JPATH_SITE.'/plugins/'.$group.'/'.$name.'/'.$name.'.j25.xml')) {
+					File::move(JPATH_SITE.'/plugins/'.$group.'/'.$name.'/'.$name.'.j25.xml', JPATH_SITE.'/plugins/'.$group.'/'.$name.'/'.$name.'.xml');
+				}
 			}
 
 			if ($group != 'finder') {
@@ -611,7 +615,7 @@ class Com_K2InstallerScript
 				{
 					$jv_err_msg = 'Your Joomla version "'.JVERSION. '" is not supported.\n This special version of K2 requires "'.$this->minimumJoomlaVersion.'+" in order to run';
 					$this->app->enqueueMessage(
-						JText::_($jv_err_msg),
+						Text::_($jv_err_msg),
 						'error'
 					);
 					return false;
@@ -622,7 +626,7 @@ class Com_K2InstallerScript
 				if (version_compare(PHP_VERSION, $this->minimumPHPVersion, 'lt'))
 				{
 					$this->app->enqueueMessage(
-						JText::_($php_err_msg),
+						Text::_($php_err_msg),
 						'error'
 					);
 					return false;

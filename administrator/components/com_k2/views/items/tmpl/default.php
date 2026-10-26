@@ -14,7 +14,8 @@ use Joomla\CMS\Factory;
 use Joomla\CMS\Language\Text;
 use Joomla\CMS\HTML\HTMLHelper;
 use Joomla\CMS\Router\Route;
-use Joomla\CMS\Filesystem\File;
+require_once JPATH_ADMINISTRATOR . '/components/com_k2/lib/k2filesystem.php';
+use K2File as File;
 use Joomla\CMS\Uri\Uri;
 
 $app = Factory::getApplication();

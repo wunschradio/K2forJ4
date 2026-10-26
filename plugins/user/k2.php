@@ -17,7 +17,8 @@ use Joomla\CMS\Component\ComponentHelper;
 use Joomla\CMS\Table\Table;
 use Joomla\CMS\Filter\InputFilter;
 use Joomla\CMS\Language\Text;
-use Joomla\CMS\Filesystem\File;
+require_once JPATH_ADMINISTRATOR . '/components/com_k2/lib/k2filesystem.php';
+use K2File as File;
 use Joomla\CMS\Router\Route;
 
 jimport('joomla.plugin.plugin');

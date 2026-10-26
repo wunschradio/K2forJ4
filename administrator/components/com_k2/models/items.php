@@ -17,8 +17,9 @@ use Joomla\CMS\Factory;
 use Joomla\CMS\Component\ComponentHelper;
 use Joomla\CMS\Plugin\PluginHelper;
 use Joomla\CMS\Language\Text;
-use Joomla\CMS\Filesystem\File;
-use Joomla\CMS\Filesystem\Folder;
+require_once JPATH_ADMINISTRATOR . '/components/com_k2/lib/k2filesystem.php';
+use K2File as File;
+use K2Folder as Folder;
 use Joomla\Registry\Registry;
 
 jimport('joomla.application.component.model');
@@ -944,27 +945,25 @@ class K2ModelItems extends K2Model
             $preserveItemIDs = true;
         }
 
-        $xml = new JSimpleXML;
-        $xml->loadFile(JPATH_COMPONENT . '/models/category.xml');
+        $xml = simplexml_load_file(JPATH_COMPONENT . '/models/category.xml');
         $categoryParams = class_exists('JParameter') ? new JParameter('') : new Registry('');
 
-        foreach ($xml->document->params as $paramGroup) {
+        foreach ($xml->params as $paramGroup) {
             foreach ($paramGroup->param as $param) {
-                if ($param->attributes('type') != 'spacer' && $param->attributes('name')) {
-                    $categoryParams->set($param->attributes('name'), $param->attributes('default'));
+                if ((string) $param['type'] != 'spacer' && (string) $param['name']) {
+                    $categoryParams->set((string) $param['name'], (string) $param['default']);
                 }
             }
         }
         $categoryParams = $categoryParams->toString();
 
-        $xml = new JSimpleXML;
-        $xml->loadFile(JPATH_COMPONENT . '/models/item.xml');
+        $xml = simplexml_load_file(JPATH_COMPONENT . '/models/item.xml');
         $itemParams = class_exists('JParameter') ? new JParameter('') : new Registry('');
 
-        foreach ($xml->document->params as $paramGroup) {
+        foreach ($xml->params as $paramGroup) {
             foreach ($paramGroup->param as $param) {
-                if ($param->attributes('type') != 'spacer' && $param->attributes('name')) {
-                    $itemParams->set($param->attributes('name'), $param->attributes('default'));
+                if ((string) $param['type'] != 'spacer' && (string) $param['name']) {
+                    $itemParams->set((string) $param['name'], (string) $param['default']);
                 }
             }
         }
@@ -1307,8 +1306,8 @@ class K2ModelItems extends K2Model
                 }
 
                 $item->tags = array();
-                if (class_exists('JHelperTags')) {
-                    $tagsHelper = new JHelperTags;
+                if (class_exists('Joomla\\CMS\\Helper\\TagsHelper')) {
+                    $tagsHelper = new \Joomla\CMS\Helper\TagsHelper();
                     $tagsHelper->getItemTags('com_content.article', $item->id);
                     $tags = $tagsHelper->itemTags;
                     foreach ($tags as $tag) {
