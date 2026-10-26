@@ -313,7 +313,7 @@ $app = Factory::getApplication();
 
                                     <input type="text" name="existingImage" id="existingImageValue" class="text_area"
                                            readonly/>
-                                    <input type="button" value="<?php echo Text::_('K2_BROWSE_SERVER'); ?>"
+                                    <input type="button" value="<?php echo Text::_('K2_BROWSE_SERVER_IMAGE'); ?>"
                                            id="k2ImageBrowseServer"/>
                                 </div>
                             </div>

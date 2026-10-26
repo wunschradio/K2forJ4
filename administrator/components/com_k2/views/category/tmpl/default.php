@@ -137,7 +137,7 @@ use Joomla\CMS\Uri\Uri;
                                 : <?php echo ini_get('upload_max_filesize'); ?>)</i>
                             <span class="sep"><?php echo Text::_('K2_OR'); ?></span>
                             <input type="text" name="existingImage" id="existingImageValue" class="text_area" readonly/>
-                            <input type="button" value="<?php echo Text::_('K2_BROWSE_SERVER'); ?>"
+                            <input type="button" value="<?php echo Text::_('K2_BROWSE_SERVER_IMAGE'); ?>"
                                    id="k2ImageBrowseServer"/>
                         </div>
                     </div>
