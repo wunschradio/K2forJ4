@@ -428,14 +428,49 @@ $app = Factory::getApplication();
                                                     if (event.origin !== window.location.origin || !button || !event.data || typeof event.data.k2gallery !== 'number') return;
                                                     button.textContent = event.data.k2gallery > 0 ? button.dataset.open : button.dataset.create;
                                                 });
-                                            </script>
 
-                                            <div class="modal fade" id="k2GalleryModal" tabindex="-1" aria-labelledby="k2GalleryModalLabel" aria-hidden="true">
+                                                // Vor dem Schließen nachfragen, wenn noch ein Upload läuft oder ausgewählte Bilder nicht hochgeladen sind
+                                                document.addEventListener('DOMContentLoaded', () => {
+                                                    const modal = document.getElementById('k2GalleryModal');
+                                                    if (!modal) return;
+
+                                                    // Fenster an den Seitenkörper hängen: im (ausgeblendeten) Reiter würde es sonst leer angezeigt
+                                                    document.body.appendChild(modal);
+
+                                                    modal.addEventListener('hide.bs.modal', (event) => {
+                                                        let state = null;
+                                                        try {
+                                                            const frame = modal.querySelector('iframe').contentWindow;
+                                                            state = typeof frame.k2gState === 'function' ? frame.k2gState() : null;
+                                                        } catch (e) { /* Fenster noch nicht geladen */ }
+                                                        if (!state) return;
+
+                                                        const button = document.getElementById('k2GalleryButton');
+                                                        const message = state.busy ? modal.dataset.busy : (state.pending ? modal.dataset.pending.replace('%d', state.pending) : '');
+
+                                                        if (message && !window.confirm(message)) {
+                                                            event.preventDefault();
+                                                            return;
+                                                        }
+
+                                                        // Vorhandene Bilder bestimmen die Beschriftung des Knopfs
+                                                        if (button) button.textContent = state.count > 0 ? button.dataset.open : button.dataset.create;
+                                                    });
+                                                });
+                                            </script>
+                                            <style>
+                                                #k2GalleryModal .modal-header { display: flex; align-items: center; }
+                                                #k2GalleryModal .k2GalleryClose { margin-left: auto; padding: 0 20px; line-height: 38px; border: 0; border-radius: 0; background: #f0506e; color: #fff; font-size: .875rem; text-transform: uppercase; }
+                                                #k2GalleryModal .k2GalleryClose:hover, #k2GalleryModal .k2GalleryClose:focus { background: #ee395b; color: #fff; }
+                                            </style>
+
+                                            <div class="modal fade" id="k2GalleryModal" tabindex="-1" aria-labelledby="k2GalleryModalLabel" aria-hidden="true"
+                                                 data-busy="<?php echo Text::_('K2_GALLERY_CLOSE_BUSY', true); ?>" data-pending="<?php echo Text::_('K2_GALLERY_CLOSE_PENDING', true); ?>">
                                                 <div class="modal-dialog modal-xl" style="max-width: 90vw;">
                                                     <div class="modal-content">
                                                         <div class="modal-header">
                                                             <h5 class="modal-title" id="k2GalleryModalLabel"><?php echo Text::_('K2_IMAGE_GALLERY'); ?></h5>
-                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Schließen"></button>
+                                                            <button type="button" class="k2GalleryClose" data-bs-dismiss="modal"><span class="icon-times me-1" aria-hidden="true"></span><?php echo Text::_('JCLOSE'); ?></button>
                                                         </div>
                                                         <div class="modal-body" style="height: 80vh;">
                                                             <iframe src="<?php echo htmlspecialchars($gallerySrc, ENT_QUOTES, 'UTF-8'); ?>"
