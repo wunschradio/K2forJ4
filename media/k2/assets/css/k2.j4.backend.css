@@ -165,9 +165,37 @@
 }
 
 .isJ30 div#toolbar {
-    /* ohne K2-Logo: Knoepfe buendig mit dem Inhalt darunter */
+    /* ohne K2-Logo: erster Knopf linksbuendig mit dem Rahmen des Inhalts (der beginnt 16px weiter links als bei Joomla) */
     background: none;
-    padding: 0px 12px 0px 4px;
+    padding: 0px 12px 0px 0px;
+    margin-left: -16px;
+}
+
+/* Filterfeld oben ausrichten wie die Auswahllisten daneben */
+.isJ30 #k2ContentView > form .k2AdminTableFilters tr td.k2AdminTableFiltersSearch {
+    vertical-align: top;
+}
+
+/* Auswahlfilter in einer Reihe; zu breite Listen werden schmaler statt umzubrechen */
+.isJ30 #k2ContentView > form .k2AdminTableFilters tr td.k2AdminTableFiltersSelects {
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: flex-end;
+    gap: 6px;
+}
+
+.isJ30 #k2ContentView > form .k2AdminTableFilters tr td.k2AdminTableFiltersSelects select {
+    flex: 0 1 auto;
+    min-width: 0;
+    width: auto;
+    margin: 0;
+}
+
+/* Spaltenkoepfe ohne Sortierung (z. B. Bild) wie die sortierbaren */
+#k2AdminContainer .adminlist thead tr th .k2ui-th-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: #040707;
 }
 
 .isJ30 table.adminlist tfoot tr td .pagination {

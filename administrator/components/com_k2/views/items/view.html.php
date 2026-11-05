@@ -99,7 +99,14 @@ class K2ViewItems extends K2View
             $langsMapping[$lang->lang_code] = $lang->title;
         }
 
+        // Sprache nur anzeigen, wenn ein angezeigter Beitrag eine andere Sprache als "Alle" hat
+        $hasOtherLanguage = false;
+
         foreach ($items as $key => $item) {
+            if ($item->language && $item->language !== '*') {
+                $hasOtherLanguage = true;
+            }
+
             $item->status = HTMLHelper::_('jgrid.published', $item->published, $key, '', ($filter_trash == 0), 'cb', $item->publish_up, $item->publish_down);
             $states = array(
                 1 => array(
@@ -191,6 +198,11 @@ class K2ViewItems extends K2View
         $languages = HTMLHelper::_('contentlanguage.existing', true, true);
         array_unshift($languages, HTMLHelper::_('select.option', '', Text::_('K2_SELECT_LANGUAGE')));
         $lists['language'] = HTMLHelper::_('select.genericlist', $languages, 'language', '', 'value', 'text', $language);
+
+        // Spalte und Filter "Sprache" ausblenden, solange alle angezeigten Beiträge "Alle" haben und kein Sprachfilter gesetzt ist
+        if (!$hasOtherLanguage && $language === '') {
+            unset($lists['language']);
+        }
 
         // Batch Operations
         $categoriesModel = K2Model::getInstance('Categories', 'K2Model');

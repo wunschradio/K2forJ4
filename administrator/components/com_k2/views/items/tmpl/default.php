@@ -120,7 +120,7 @@ $context = Factory::getApplication()->input->getCmd('context');
                         <?php echo HTMLHelper::_('grid.sort', 'K2_HITS', 'i.hits', @$this->lists['order_Dir'], @$this->lists['order']); ?>
                     </th>
                     <th class="k2ui-center k2ui-hide-on-mobile">
-                        <?php echo Text::_('K2_IMAGE'); ?>
+                        <span class="k2ui-th-label"><?php echo Text::_('K2_IMAGE'); ?></span>
                     </th>
                     <?php if (isset($this->lists['language'])): ?>
                         <th class="k2ui-center k2ui-hide-on-mobile">
@@ -328,7 +328,7 @@ $context = Factory::getApplication()->input->getCmd('context');
                             <?php echo $this->lists['batchAuthor']; ?>
                         </div>
                         <div class="k2ui-row">
-                            <?php if (isset($this->lists['language'])): ?>
+                            <?php if (isset($this->lists['batchLanguage'])): ?>
                                 <label><i class="fa fa-globe"></i> <?php echo Text::_('K2_LANGUAGE'); ?></label>
                                 <?php echo $this->lists['batchLanguage']; ?>
                             <?php endif; ?>
