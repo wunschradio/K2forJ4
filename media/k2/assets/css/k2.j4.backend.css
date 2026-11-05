@@ -165,9 +165,9 @@
 }
 
 .isJ30 div#toolbar {
-    /* ohne K2-Logo: Werkzeugleiste beginnt links wie in Joomla */
+    /* ohne K2-Logo: Knoepfe buendig mit dem Inhalt darunter */
     background: none;
-    padding: 0px 12px;
+    padding: 0px 12px 0px 4px;
 }
 
 .isJ30 table.adminlist tfoot tr td .pagination {
