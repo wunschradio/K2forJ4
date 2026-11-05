@@ -209,6 +209,9 @@ $context = Factory::getApplication()->input->getCmd('context');
                                         <?php else: ?>
                                             <a href="<?php echo Route::_('index.php?option=com_k2&view=category&cid=' . $row->catid); ?>"><?php echo $row->category; ?></a>
                                         <?php endif; ?>
+                                        <?php if (!empty($row->additionalCategories)): ?>
+                                            <?php foreach ($row->additionalCategories as $extra): ?>, <?php echo htmlspecialchars($extra->name, ENT_QUOTES, 'UTF-8'); ?><?php endforeach; ?>
+                                        <?php endif; ?>
                                     </div>
                                     <div class="k2ui-list-mobile-attribute">
                                         <?php echo Text::_('K2_AUTHOR'); ?>:
@@ -236,6 +239,11 @@ $context = Factory::getApplication()->input->getCmd('context');
                                     <?php echo $row->category; ?>
                                 <?php else: ?>
                                     <a href="<?php echo Route::_('index.php?option=com_k2&view=category&cid=' . $row->catid); ?>"><?php echo $row->category; ?></a>
+                                <?php endif; ?>
+                                <?php if (!empty($row->additionalCategories)): ?>
+                                    <div class="k2ui-additional-categories">
+                                        <?php foreach ($row->additionalCategories as $i => $extra): ?><?php echo $i ? ', ' : '+ '; ?><?php if ($context == "modalselector"): ?><?php echo htmlspecialchars($extra->name, ENT_QUOTES, 'UTF-8'); ?><?php else: ?><a href="<?php echo Route::_('index.php?option=com_k2&view=category&cid=' . (int) $extra->id); ?>"><?php echo htmlspecialchars($extra->name, ENT_QUOTES, 'UTF-8'); ?></a><?php endif; ?><?php endforeach; ?>
+                                    </div>
                                 <?php endif; ?>
                             </td>
                             <td class="k2ui-hide-on-mobile">

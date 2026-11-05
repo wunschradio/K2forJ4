@@ -381,3 +381,6 @@ form input[readonly] {
         width:100%
     }
 }
+
+/* Weitere Kategorien (Plugin K2 - Weitere Kategorien) unter der Hauptkategorie */
+#k2AdminContainer .k2ui-additional-categories { font-size: 12px; color: #6c757d; margin-top: 2px; }

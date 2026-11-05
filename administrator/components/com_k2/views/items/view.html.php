@@ -135,6 +135,11 @@ class K2ViewItems extends K2View
                 $item->language = $langsMapping[$item->language];
             }
         }
+
+        // Plugins können die Zeilen ergänzen (z. B. K2 - Weitere Kategorien: $item->additionalCategories)
+        PluginHelper::importPlugin('k2');
+        Factory::getApplication()->triggerEvent('onK2PrepareItemsList', array(&$items));
+
         $this->rows = $items;
 
         $lists = array();
