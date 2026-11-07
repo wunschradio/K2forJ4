@@ -66,7 +66,7 @@ class Com_K2InstallerScript
 
 		$src = $parent->getParent()->getPath('source');
 
-		$k2AlreadyInstalled = File::exists(JPATH_SITE.'/modules/mod_k2_content/mod_k2_content.php');
+		$k2AlreadyInstalled = is_file(JPATH_SITE.'/modules/mod_k2_content/mod_k2_content.php');
 
 		// Get extension manifest
 		$manifest = $parent->getParent()->manifest;
@@ -89,10 +89,10 @@ class Com_K2InstallerScript
 			$result = $installer->install($path);
 			if ($result) {
 				$root = ($client == 'administrator') ? JPATH_ADMINISTRATOR : JPATH_SITE;
-				if (File::exists($root.'/modules/'.$name.'/'.$name.'.xml')) {
+				if (is_file($root.'/modules/'.$name.'/'.$name.'.xml')) {
 					File::delete($root.'/modules/'.$name.'/'.$name.'.xml');
 				}
-				if (File::exists($root.'/modules/'.$name.'/'.$name.'.j25.xml')) {
+				if (is_file($root.'/modules/'.$name.'/'.$name.'.j25.xml')) {
 					File::move($root.'/modules/'.$name.'/'.$name.'.j25.xml', $root.'/modules/'.$name.'/'.$name.'.xml');
 				}
 			}
@@ -118,7 +118,7 @@ class Com_K2InstallerScript
 			$name = (string)$plugin->attributes()->plugin;
 			$group = (string)$plugin->attributes()->group;
 			$path = $src.'/plugins/'.$group;
-			if (Folder::exists($src.'/plugins/'.$group.'/'.$name)) {
+			if (is_dir($src.'/plugins/'.$group.'/'.$name)) {
 				$path = $src.'/plugins/'.$group.'/'.$name;
 			}
 
@@ -128,10 +128,10 @@ class Com_K2InstallerScript
             );
 			$result = $installer->install($path);
 			if ($result && $group != 'finder') {
-				if (File::exists(JPATH_SITE.'/plugins/'.$group.'/'.$name.'/'.$name.'.xml')) {
+				if (is_file(JPATH_SITE.'/plugins/'.$group.'/'.$name.'/'.$name.'.xml')) {
 					File::delete(JPATH_SITE.'/plugins/'.$group.'/'.$name.'/'.$name.'.xml');
 				}
-				if (File::exists(JPATH_SITE.'/plugins/'.$group.'/'.$name.'/'.$name.'.j25.xml')) {
+				if (is_file(JPATH_SITE.'/plugins/'.$group.'/'.$name.'/'.$name.'.j25.xml')) {
 					File::move(JPATH_SITE.'/plugins/'.$group.'/'.$name.'/'.$name.'.j25.xml', JPATH_SITE.'/plugins/'.$group.'/'.$name.'/'.$name.'.xml');
 				}
 			}
@@ -146,10 +146,10 @@ class Com_K2InstallerScript
 		}
 
 		// File Cleanups
-		if (File::exists(JPATH_ADMINISTRATOR.'/components/com_k2/admin.k2.php')) {
+		if (is_file(JPATH_ADMINISTRATOR.'/components/com_k2/admin.k2.php')) {
 			File::delete(JPATH_ADMINISTRATOR.'/components/com_k2/admin.k2.php');
 		}
-		if (File::exists(JPATH_ADMINISTRATOR.'/components/com_k2/models/cpanel.php')) {
+		if (is_file(JPATH_ADMINISTRATOR.'/components/com_k2/models/cpanel.php')) {
 			File::delete(JPATH_ADMINISTRATOR.'/components/com_k2/models/cpanel.php');
 		}
 
@@ -185,10 +185,10 @@ class Com_K2InstallerScript
 		foreach ($folders as $folder) {
 			@chmod($folder, 0755);
 		}
-		if (Folder::exists($mediaPath.'/'.'.tmb')) {
+		if (is_dir($mediaPath.'/'.'.tmb')) {
 			@chmod($mediaPath.'/'.'.tmb', 0755);
 		}
-		if (Folder::exists($mediaPath.'/'.'.quarantine')) {
+		if (is_dir($mediaPath.'/'.'.quarantine')) {
 			@chmod($mediaPath.'/'.'.quarantine', 0755);
 		}
 		*/

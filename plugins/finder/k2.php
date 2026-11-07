@@ -145,7 +145,10 @@ class plgFinderK2 extends Adapter
 
         // Build the necessary route and path information.
         $item->url = $this->getURL($item->id, $this->extension, $this->layout);
-        $item->route = K2HelperRoute::getItemRoute($item->slug, $item->catslug);
+        // Indexing runs in the backend with all access levels, so the menu item found there may be one guests
+        // cannot open (e.g. a members-only list). Keep it only if guests may see it, otherwise use a public
+        // K2 menu item for the same category.
+        $item->route = $this->publicRoute(K2HelperRoute::getItemRoute($item->slug, $item->catslug), (int) $item->catid);
 
         if (version_compare(JVERSION, '4.0.0-dev', 'lt'))
         {
@@ -293,5 +296,34 @@ class plgFinderK2 extends Adapter
             // Reindex the item
             $this->reindex($item->id);
         }
+    }
+
+    /**
+     * Route with an Itemid that guests may open. Falls back to a public K2 menu item for the category,
+     * or to no Itemid at all.
+     */
+    private function publicRoute($route, $catid)
+    {
+        if (!preg_match('/&Itemid=(\d+)/', $route, $m)) {
+            return $route;
+        }
+
+        $guestLevels = \Joomla\CMS\Access\Access::getAuthorisedViewLevels(0);
+        $menu        = Factory::getApplication()->getMenu('site');
+        $current     = $menu->getItem((int) $m[1]);
+
+        if ($current && in_array((int) $current->access, $guestLevels, true)) {
+            return $route;
+        }
+
+        $component = ComponentHelper::getComponent('com_k2');
+
+        foreach ((array) $menu->getItems(['component_id', 'access'], [$component->id, $guestLevels]) as $menuItem) {
+            if (($menuItem->query['task'] ?? '') === 'category' && (int) ($menuItem->query['id'] ?? 0) === $catid) {
+                return preg_replace('/&Itemid=\d+/', '&Itemid=' . (int) $menuItem->id, $route);
+            }
+        }
+
+        return preg_replace('/&Itemid=\d+/', '', $route);
     }
 }
