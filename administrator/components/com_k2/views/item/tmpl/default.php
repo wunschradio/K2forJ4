@@ -526,6 +526,23 @@ $app = Factory::getApplication();
                                             : <?php echo ini_get('upload_max_filesize'); ?>)</i>
                                     </div>
                                 </div>
+                                <div class="itemAdditionalField separator">
+                                    <div class="itemAdditionalValue">
+                                        <?php echo Text::_('K2_OR'); ?>
+                                    </div>
+                                    <div class="itemAdditionalData"></div>
+                                </div>
+                                <div class="itemAdditionalField">
+                                    <div class="itemAdditionalValue">
+                                        <label for="flickrGallery"><?php echo Text::_('K2_OR_ENTER_A_FLICKR_SET_URL'); ?></label>
+                                    </div>
+                                    <div class="itemAdditionalData">
+                                        <?php // Album URL as with SIGPro; the gallery content plugin embeds Flickr albums (two-click in the frontend) ?>
+                                        <input type="url" id="flickrGallery" name="flickrGallery" size="50" class="form-control"
+                                               placeholder="https://www.flickr.com/photos/…/albums/…"
+                                               value="<?php echo ($this->row->galleryType == 'flickr') ? htmlspecialchars($this->row->galleryValue, ENT_QUOTES) : ''; ?>"/>
+                                    </div>
+                                </div>
                                 <?php if (!empty($this->row->gallery)): ?>
                                     <!-- Preview -->
                                     <div id="itemGallery" class="itemAdditionalField">
