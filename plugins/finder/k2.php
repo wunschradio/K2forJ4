@@ -131,12 +131,12 @@ class plgFinderK2 extends Adapter
 
         // Initialize the item parameters.
         $registry = new Registry;
-        $registry->loadString($item->params);
+        $registry->loadString((string) $item->params);
         $item->params = ComponentHelper::getParams('com_k2', true);
         $item->params->merge($registry);
 
         $registry = new Registry;
-        $registry->loadString($item->metadata);
+        $registry->loadString((string) $item->metadata);
         $item->metadata = $registry;
 
         // Trigger the onContentPrepare event.
@@ -204,6 +204,11 @@ class plgFinderK2 extends Adapter
             $item->addTaxonomy('Extra fields', $item->extra_fields);
         }
 
+        // Add the tag taxonomy data (published K2 tags of the item), so results can be filtered by tag.
+        foreach ($this->getItemTags((int) $item->id) as $tag) {
+            $item->addTaxonomy('Tag', $tag);
+        }
+
         // Get content extras.
         Helper::getContentExtras($item);
 
@@ -241,7 +246,7 @@ class plgFinderK2 extends Adapter
         $case_when_item_alias = ' CASE WHEN ';
         $case_when_item_alias .= $sql->charLength('a.alias');
         $case_when_item_alias .= ' THEN ';
-        $a_id = $sql->castAsChar('a.id');
+        $a_id = $sql->castAs('CHAR', 'a.id');
         $case_when_item_alias .= $sql->concatenate(array($a_id, 'a.alias'), ':');
         $case_when_item_alias .= ' ELSE ';
         $case_when_item_alias .= $a_id . ' END as slug';
@@ -250,7 +255,7 @@ class plgFinderK2 extends Adapter
         $case_when_category_alias = ' CASE WHEN ';
         $case_when_category_alias .= $sql->charLength('c.alias');
         $case_when_category_alias .= ' THEN ';
-        $c_id = $sql->castAsChar('c.id');
+        $c_id = $sql->castAs('CHAR', 'c.id');
         $case_when_category_alias .= $sql->concatenate(array($c_id, 'c.alias'), ':');
         $case_when_category_alias .= ' ELSE ';
         $case_when_category_alias .= $c_id . ' END as catslug';
@@ -325,5 +330,19 @@ class plgFinderK2 extends Adapter
         }
 
         return preg_replace('/&Itemid=\d+/', '', $route);
+    }
+
+    /** Names of the published K2 tags of an item */
+    private function getItemTags($itemId)
+    {
+        $db    = $this->db;
+        $query = $db->getQuery(true)
+            ->select($db->quoteName('t.name'))
+            ->from($db->quoteName('#__k2_tags', 't'))
+            ->join('INNER', $db->quoteName('#__k2_tags_xref', 'x') . ' ON ' . $db->quoteName('x.tagID') . ' = ' . $db->quoteName('t.id'))
+            ->where($db->quoteName('x.itemID') . ' = ' . (int) $itemId)
+            ->where($db->quoteName('t.published') . ' = 1');
+
+        return (array) $db->setQuery($query)->loadColumn();
     }
 }

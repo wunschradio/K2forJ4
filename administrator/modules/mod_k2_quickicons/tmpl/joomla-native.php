@@ -26,14 +26,14 @@ $icons = [
 	 'name'    => 'K2_FEATURED_ITEMS',
 	 'access'  => ['core.manage', 'com_k2'],
 	 'group'   => 'MOD_QUICKICON_SITE',
-	 'param'   => (int)$params->get('show_featured', 1)
+	 'param'   => (int)$params->get('show_featured', 0)
 	],
 	['image'   => 'icon-trash',
 	 'link'    => Route::_('index.php?option=com_k2&view=items&filter_trash=0'),
 	 'name'    => 'K2_TRASHED_ITEMS',
 	 'access'  => ['core.manage', 'com_k2'],
 	 'group'   => 'MOD_QUICKICON_SITE',
-	 'param'   => (int)$params->get('show_trashed', 1)
+	 'param'   => (int)$params->get('show_trashed', 0)
 	],
 	['image'   => 'icon-list',
 	 'link'    => Route::_('index.php?option=com_k2&view=categories'),
@@ -56,7 +56,7 @@ $icons = [
 	 'name'    => 'K2_COMMENTS',
 	 'access'  => ['core.manage', 'com_k2'],
 	 'group'   => 'MOD_K2_QUICKICON',
-	 'param'   => (int)$params->get('show_comments', 1)
+	 'param'   => (int)$params->get('show_comments', 0)
 	],
 	['image'   => 'icon-cube',
 	 'link'    => Route::_('index.php?option=com_k2&view=extrafields'),
@@ -64,7 +64,7 @@ $icons = [
 	 'name'    => 'K2_EXTRA_FIELDS',
 	 'access'  => ['core.manage', 'com_k2', 'core.create', 'com_k2'],
 	 'group'   => 'MOD_K2_QUICKICON',
-	 'param'   => (int)$params->get('show_extra_fields', 1)
+	 'param'   => (int)$params->get('show_extra_fields', 0)
 	],
 	['image'   => 'icon-cubes',
 	 'link'    => Route::_('index.php?option=com_k2&view=extrafieldsgroups'),
@@ -72,7 +72,7 @@ $icons = [
 	 'name'    => 'K2_EXTRA_FIELD_GROUPS',
 	 'access'  => ['core.manage', 'com_k2', 'core.create', 'com_k2'],
 	 'group'   => 'MOD_K2_QUICKICON',
-	 'param'   => (int)$params->get('show_extra_field_groups', 1)
+	 'param'   => (int)$params->get('show_extra_field_groups', 0)
 	],
 	['image'   => 'icon-picture',
 	 'link'    => Route::_('index.php?option=com_k2&view=media'),
@@ -87,7 +87,7 @@ $icons = [
 	 'target'  => 'k2Popup',
 	 'onclick' => 'K2Popup(\'https://www.joomlaworks.net/documentation/\');',
 	 'group'   => 'MOD_K2_QUICKICON',
-	 'param'   => (int)$params->get('show_documentation', 1)
+	 'param'   => (int)$params->get('show_documentation', 0)
 	],
 	['image'   => 'icon-puzzle-piece',
 	 'link'    => 'https://www.joomlaworks.net/extensions/',
@@ -95,7 +95,7 @@ $icons = [
 	 'target'  => 'k2Popup',
 	 'onclick' => 'K2Popup(\'https://www.joomlaworks.net/extensions/\');',
 	 'group'   => 'MOD_K2_QUICKICON',
-	 'param'   => (int)$params->get('show_extension', 1)
+	 'param'   => (int)$params->get('show_extension', 0)
 	],
 	['image'   => 'icon-users',
 	 'link'    => 'https://www.joomlaworks.net/forum/k2/',
@@ -103,7 +103,7 @@ $icons = [
 	 'target'  => 'k2Popup',
 	 'onclick' => 'K2Popup(\'https://www.joomlaworks.net/forum/k2/\');',
 	 'group'   => 'MOD_K2_QUICKICON',
-	 'param'   => (int)$params->get('show_community', 1)
+	 'param'   => (int)$params->get('show_community', 0)
 	]
 ];
 $buttons = [];
