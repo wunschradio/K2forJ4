@@ -42,7 +42,11 @@ class K2Router extends RouterBase
             return $this->K2CustomSefBuildRoute($query);
         }
 
-        else return $this->K2BuildRoute($query);
+        // Joomla 3 hat ":" in Segmenten zu "-" gemacht (72:titel -> 72-titel), ab Joomla 4 nicht mehr.
+        // K2ParseRoute liest die ID weiter per (int), beide Schreibweisen werden also verstanden.
+        return array_map(static function ($segment) {
+            return str_replace(':', '-', (string) $segment);
+        }, $this->K2BuildRoute($query));
     }
 
     public function parse(&$segments)

@@ -530,7 +530,9 @@ class K2ViewItem extends K2View
                 $metaDesc = strip_tags($metaDesc);
             }
 
-            if ($params->get('menu-meta_description')) {
+            // Menü-Beschreibung nur, wenn der Menüpunkt genau diesen Beitrag zeigt (sonst gälte die Beschreibung
+            // z. B. eines Blog-Menüpunkts für alle Beiträge darunter)
+            if ($menuItemMatch && $params->get('menu-meta_description')) {
                 $metaDesc = $params->get('menu-meta_description');
             }
 
@@ -552,7 +554,7 @@ class K2ViewItem extends K2View
                 }
             }
 
-            if ($params->get('menu-meta_keywords')) {
+            if ($menuItemMatch && $params->get('menu-meta_keywords')) {
                 $metaKeywords = $params->get('menu-meta_keywords');
             }
 
